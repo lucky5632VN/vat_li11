@@ -1,0 +1,19 @@
+[00:00:02.721] Server  LOG      ✓ Ready in 1631ms
+[00:00:05.759] Server  LOG      ○ Compiling / ...
+[00:00:06.865] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:07.103] Browser LOG     %c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit
+[00:00:07.103] Browser LOG     %c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit pageview {"path":"/","route":"/"}
+[00:00:07.103] Browser LOG     %c[Vercel Web Analytics]%c [pageview] http://localhost:3000/ color: rgb(120, 120, 120) color: inherit {"dp":"/","o":"http://localhost:3000/","sdkn":"@vercel/analytics/next","sdkv":"1.6.1","sv":"0.1.3","ts":1765380251858}
+[00:01:33.960] Browser LOG     I1210 15:25:38.710000 1880752 gl_context.cc:374] GL version: 3.0 (OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))), renderer: WebKit WebGL
+[00:01:33.961] Browser WARN    W1210 15:25:38.711000 1880752 gl_context.cc:1060] OpenGL error checking is disabled
+[00:01:33.961] Browser LOG     Graph successfully started running.
+[00:01:45.225] Browser LOG     Graph finished closing successfully.
+[00:01:45.225] Browser LOG     I1210 15:25:49.984000 1880752 gl_context_webgl.cc:132] Successfully destroyed WebGL context with handle 1
+[00:01:45.853] Browser LOG     I1210 15:25:50.233000 1880752 gl_context.cc:374] GL version: 3.0 (OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))), renderer: WebKit WebGL
+[00:01:45.853] Browser WARN    W1210 15:25:50.233000 1880752 gl_context.cc:1060] OpenGL error checking is disabled
+[00:01:45.853] Browser LOG     Graph successfully started running.
+[00:01:51.258] Browser LOG     Graph finished closing successfully.
+[00:01:51.258] Browser LOG     I1210 15:25:55.979000 1880752 gl_context_webgl.cc:132] Successfully destroyed WebGL context with handle 1
+[00:02:09.690] Browser LOG     I1210 15:26:14.024000 1880752 gl_context.cc:374] GL version: 3.0 (OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))), renderer: WebKit WebGL
+[00:02:09.690] Browser WARN    W1210 15:26:14.025000 1880752 gl_context.cc:1060] OpenGL error checking is disabled
+[00:02:09.690] Browser LOG     Graph successfully started running.
