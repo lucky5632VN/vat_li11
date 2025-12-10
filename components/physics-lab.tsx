@@ -353,7 +353,7 @@ export default function PhysicsLab() {
         >
           {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
 
-          <div className={`animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 h-full w-full ${["spring-oscillator", "simple-pendulum", "harmonic-oscillation", "mechanical-waves", "su-chuyen-the-html"].includes(activeTab) || customModules.find(m => m.id === activeTab)
+          <div className={`animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 h-full w-full ${["spring-oscillator", "simple-pendulum", "harmonic-oscillation", "mechanical-waves", "sound-waves", "su-chuyen-the-html"].includes(activeTab) || customModules.find(m => m.id === activeTab)
               ? "overflow-hidden"
               : "overflow-y-auto overflow-x-hidden custom-scrollbar"
             }`}>
