@@ -43,6 +43,7 @@ import StandingWaves from "./experiments/standing-waves"
 import SoundSpeedExperiment from "./experiments/sound-speed"
 import HandSpringOscillator from "./experiments/hand-spring-oscillator"
 import HandSimplePendulum from "./experiments/hand-simple-pendulum"
+import PhaseChange3D from "./experiments/phase-change-3d"
 
 // Tách mục Intro ra riêng để xử lý hiển thị đặc biệt
 const INTRO_ITEM = { id: "intro", label: "Giới thiệu chung", icon: FlaskConical }
@@ -139,16 +140,7 @@ export default function PhysicsLab() {
 
       case "hand-spring": return <HandSpringOscillator />
       case "hand-pendulum": return <HandSimplePendulum />
-      case "su-chuyen-the-html": return (
-        <div className="w-full h-full bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700 relative">
-          <iframe
-            src="/su-chuyen-the.html"
-            className="w-full h-full border-0"
-            title="Sự chuyển thể"
-            allow="camera; microphone; fullscreen; clipboard-read; clipboard-write;"
-          />
-        </div>
-      )
+      case "su-chuyen-the-html": return <PhaseChange3D />
 
     }
 
@@ -354,8 +346,8 @@ export default function PhysicsLab() {
           {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
 
           <div className={`animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 h-full w-full ${["spring-oscillator", "simple-pendulum", "harmonic-oscillation", "mechanical-waves", "sound-waves", "su-chuyen-the-html"].includes(activeTab) || customModules.find(m => m.id === activeTab)
-              ? "overflow-hidden"
-              : "overflow-y-auto overflow-x-hidden custom-scrollbar"
+            ? "overflow-hidden"
+            : "overflow-y-auto overflow-x-hidden custom-scrollbar"
             }`}>
             {renderContent()}
           </div>
