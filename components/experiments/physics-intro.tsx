@@ -246,7 +246,7 @@ export default function PhysicsIntro({ onSelectExperiment }: { onSelectExperimen
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 dark:bg-cyan-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-600 dark:bg-cyan-500"></span>
             </span>
-            <span>Phòng thí nghiệm ảo v2.0 // Minimalist</span>
+            <span>Phòng thí nghiệm ảo v2.0</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-snug">

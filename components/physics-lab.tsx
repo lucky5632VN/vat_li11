@@ -183,12 +183,20 @@ export default function PhysicsLab() {
           </NeonButton>
 
           <div className="flex flex-col">
-            <h1 className="text-2xl md:text-3xl font-bold font-sans tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-blue-700 dark:from-cyan-400 dark:to-blue-600 uppercase">
-              PHÒNG THÍ NGHIỆM VẬT LÝ <span className="text-xs align-top opacity-50 text-slate-500 dark:text-slate-400">v2.1</span>
-            </h1>
-            <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-500 font-sans font-bold uppercase tracking-widest">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-              Hệ thống: Sẵn sàng
+            <div className="flex items-center gap-3 select-none group cursor-pointer">
+              <div className="relative">
+                <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <Atom className="w-8 h-8 md:w-10 md:h-10 text-cyan-600 dark:text-cyan-400 relative z-10 transition-transform duration-700 group-hover:rotate-180" />
+              </div>
+              <div className="flex flex-col">
+                <h1 className="text-2xl md:text-3xl font-bold font-sans tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-cyan-500 to-blue-600 dark:from-cyan-400 dark:via-sky-400 dark:to-blue-500 uppercase flex items-center gap-2">
+                  VẬT LÝ <span className="text-slate-700 dark:text-white">LAB</span>
+                </h1>
+                <div className="flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400 font-sans font-bold uppercase tracking-widest leading-none">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.8)] animate-pulse"></span>
+                  ONLINE v2.0
+                </div>
+              </div>
             </div>
           </div>
         </div>
