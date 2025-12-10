@@ -153,28 +153,29 @@ export default function SpringOscillator() {
   }, [])
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-2 space-y-4">
+    <div className="flex flex-col lg:flex-row h-full gap-4 p-4 lg:p-6 w-full">
+      {/* Left Main (Canvas + Controls) */}
+      <div className="flex-1 flex flex-col min-h-0 gap-4">
+        {/* Viewport Container - Grows to fill space */}
+        <div className={`relative flex-1 bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700/50 shadow-sm ${mode === "compare" ? "grid grid-rows-2" : ""}`}>
 
-        {/* VIEWPORT AREA */}
-        <div className={`grid gap-4 ${mode === "compare" ? "grid-rows-2" : "grid-rows-1"} relative`}>
-          {/* OVERLAY ENERGY GRAPH (Absolute over the viewport area) */}
-          <div className="absolute bottom-0 left-0 w-full h-[200px] pointer-events-none z-20 flex flex-col justify-end">
+          {/* OVERLAY ENERGY GRAPH (Absolute over the viewport area) - Adjusted height */}
+          <div className="absolute bottom-0 left-0 w-full h-[150px] pointer-events-none z-20 flex flex-col justify-end opacity-80">
             <canvas
               ref={energyCanvasRef}
               width={800}
-              height={200}
+              height={150}
               className="w-full h-full"
             />
           </div>
 
           {/* System 1 */}
-          <div className="relative bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700/50 h-[500px]">
+          <div className="relative h-full overflow-hidden">
             {mode === "compare" && <div className="absolute top-2 left-2 z-10 text-xs font-bold text-blue-400 bg-black/50 px-2 py-1 rounded">System 1</div>}
             <OscillatorView
               sysId="sys1"
               params={sys1.params}
-              state={sys1.calculateState(sys1.timeRef.current)} // Get instantaneous state
+              state={sys1.calculateState(sys1.timeRef.current)}
               derived={sys1.derived}
               layout={layout}
               onParameterChange={(p) => sys1.setParams(prev => ({ ...prev, ...p }))}
@@ -187,7 +188,7 @@ export default function SpringOscillator() {
 
           {/* System 2 (Only in Compare Mode) */}
           {mode === "compare" && (
-            <div className="relative animate-in slide-in-from-top-4 duration-300 bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700/50">
+            <div className="relative h-full overflow-hidden border-t border-slate-700/50">
               <div className="absolute top-2 left-2 z-10 text-xs font-bold text-orange-400 bg-black/50 px-2 py-1 rounded">System 2</div>
               <OscillatorView
                 sysId="sys2"
@@ -208,30 +209,32 @@ export default function SpringOscillator() {
           )}
         </div>
 
-        {/* UNIFIED CONTROLS */}
-        <div className="flex justify-center gap-3 py-2">
-          <button onClick={handleReset} className="w-12 h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
-            <RotateCcw size={20} />
+        {/* UNIFIED CONTROLS - Fixed at bottom */}
+        <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex items-center justify-center gap-3 shrink-0 shadow-sm z-10">
+          <button onClick={handleReset} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Reset">
+            <RotateCcw size={18} />
           </button>
-          <button onClick={stepBackward} className="w-12 h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
-            <SkipBack size={20} />
+          <button onClick={stepBackward} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Lùi">
+            <SkipBack size={18} />
           </button>
           <button
             onClick={togglePlay}
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent ${isPlaying
+            className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent shrink-0 ${isPlaying
               ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/20"
               : "bg-cyan-600 hover:bg-cyan-500 shadow-cyan-500/30"
               } text-white`}
+            title={isPlaying ? "Dừng" : "Chạy"}
           >
-            {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
+            {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
           </button>
-          <button onClick={stepForward} className="w-12 h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
-            <SkipForward size={20} />
+          <button onClick={stepForward} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Tiến">
+            <SkipForward size={18} />
           </button>
         </div>
       </div>
 
-      <div className="space-y-4">
+      {/* Right Sidebar - Scrollable */}
+      <div className="lg:w-80 flex-none flex flex-col gap-4 overflow-y-auto pr-1 pb-2 custom-scrollbar lg:h-full">
         <ControlPanel title="Cấu hình hệ thống">
           {/* Mode Selection */}
 
@@ -301,7 +304,7 @@ export default function SpringOscillator() {
           </div>
         </ControlPanel>
 
-        <div className="bg-[#1e293b] rounded-xl p-0 border border-cyan-900/50 overflow-hidden">
+        <div className="bg-[#1e293b] rounded-xl p-0 border border-cyan-900/50 overflow-hidden shadow-sm shrink-0">
           <div className="bg-slate-800/50 p-3 border-b border-slate-700 flex items-center gap-2">
             <Activity className="w-4 h-4 text-green-400" />
             <h3 className="text-sm font-bold text-slate-200">Đại lượng ({mode === "compare" ? (activeTab === "system1" ? "Sys 1" : "Sys 2") : "Sys 1"})</h3>
@@ -342,9 +345,9 @@ export default function SpringOscillator() {
           </div>
         </div>
 
-        <div className="bg-[#16213e] rounded-lg p-4 border border-cyan-900/50">
-          <h3 className="text-cyan-400 font-semibold mb-2">Công thức</h3>
-          <div className="text-sm text-gray-300 space-y-1 font-mono">
+        <div className="bg-[#16213e] rounded-lg p-4 border border-cyan-900/50 shadow-sm shrink-0">
+          <h3 className="text-cyan-400 font-semibold mb-2 text-sm uppercase tracking-wider">Công thức</h3>
+          <div className="text-xs md:text-sm text-gray-300 space-y-1 font-mono">
             <p>ω = √(k/m) = {activeSys.derived.omega.toFixed(2)} rad/s</p>
             <p>T = 2π√(m/k) = {activeSys.derived.period.toFixed(2)} s</p>
             <p>F = -kx (Định luật Hooke)</p>

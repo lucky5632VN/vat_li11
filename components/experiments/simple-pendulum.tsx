@@ -254,6 +254,33 @@ export default function SimplePendulum() {
         }
     }, [params, drawSim, drawEnergyGraph, isPlaying])
 
+    // Resize Logic
+    useEffect(() => {
+        const handleResize = () => {
+            if (canvasRef.current && canvasRef.current.parentElement) {
+                const { width, height } = canvasRef.current.parentElement.getBoundingClientRect()
+                canvasRef.current.width = width
+                canvasRef.current.height = height
+
+                // Redraw Sim
+                drawSim(canvasRef.current.getContext("2d")!, timeRef.current)
+            }
+            if (energyCanvasRef.current && energyCanvasRef.current.parentElement) {
+                const { width, height } = energyCanvasRef.current.parentElement.getBoundingClientRect()
+                energyCanvasRef.current.width = width
+                energyCanvasRef.current.height = height
+
+                // Redraw Energy
+                drawEnergyGraph(energyCanvasRef.current.getContext("2d")!)
+            }
+        }
+
+        window.addEventListener('resize', handleResize)
+        handleResize()
+
+        return () => window.removeEventListener('resize', handleResize)
+    }, [drawSim, drawEnergyGraph])
+
     const handleStep = (dir: number) => {
         setIsPlaying(false)
         timeRef.current = Math.max(0, timeRef.current + dir * 0.05)
@@ -276,44 +303,52 @@ export default function SimplePendulum() {
     const currW = currWt + currWd
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 space-y-4">
-                {/* Canvas Area with Overlay Graph */}
-                <div className="relative bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700/50 shadow-sm h-[500px]">
-                    <canvas ref={canvasRef} width={800} height={500} className="w-full h-full block" />
+        <div className="flex flex-col lg:flex-row h-full gap-4 p-4 lg:p-6 w-full">
+            {/* Left Main (Canvas + Controls) */}
+            <div className="flex-1 flex flex-col min-h-0 gap-4">
+                {/* Canvas Area with Overlay Graph - Grows to fill space */}
+                <div className="flex-1 relative bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700/50 shadow-sm flex flex-col">
+                    <div className="absolute inset-0">
+                        <canvas ref={canvasRef} className="w-full h-full block" />
+                    </div>
 
-                    {/* Energy Graph Overlay */}
-                    <canvas
-                        ref={energyCanvasRef}
-                        width={800}
-                        height={200}
-                        className="absolute bottom-0 left-0 w-full h-[200px] pointer-events-none z-10"
-                    />
+                    {/* Energy Graph Overlay - Fixed height at bottom of canvas area */}
+                    <div className="absolute bottom-0 left-0 w-full h-[150px] pointer-events-none z-10 opacity-80">
+                        <canvas
+                            ref={energyCanvasRef}
+                            width={800}
+                            height={150}
+                            className="w-full h-full"
+                        />
+                    </div>
                 </div>
 
-                {/* UNIFIED CONTROLS */}
-                <div className="flex justify-center gap-3 py-2">
-                    <button onClick={handleReset} className="w-12 h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
-                        <RotateCcw size={20} />
+                {/* UNIFIED CONTROLS - Fixed at bottom */}
+                <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex items-center justify-center gap-3 shrink-0 shadow-sm z-10">
+                    <button onClick={handleReset} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Reset">
+                        <RotateCcw size={18} />
                     </button>
-                    <button onClick={() => handleStep(-1)} className="w-12 h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
-                        <SkipBack size={20} />
+                    <button onClick={() => handleStep(-1)} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Lùi">
+                        <SkipBack size={18} />
                     </button>
                     <button
                         onClick={() => setIsPlaying(!isPlaying)}
-                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent ${isPlaying
+                        className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent shrink-0 ${isPlaying
                             ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/20"
                             : "bg-cyan-600 hover:bg-cyan-500 shadow-cyan-500/30"
                             } text-white`}
+                        title={isPlaying ? "Dừng" : "Chạy"}
                     >
-                        {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
+                        {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
                     </button>
-                    <button onClick={() => handleStep(1)} className="w-12 h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
-                        <SkipForward size={20} />
+                    <button onClick={() => handleStep(1)} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Tiến">
+                        <SkipForward size={18} />
                     </button>
                 </div>
             </div>
-            <div className="space-y-4">
+
+            {/* Right Sidebar - Scrollable */}
+            <div className="lg:w-80 flex-none flex flex-col gap-4 overflow-y-auto pr-1 pb-2 custom-scrollbar lg:h-full">
                 {/* CONFIGURATION */}
                 <ControlPanel title="Cấu hình hệ thống">
                     <div className="space-y-4">
@@ -391,7 +426,7 @@ export default function SimplePendulum() {
                 </ControlPanel>
 
                 {/* STATS */}
-                <div className="bg-[#1e293b] rounded-xl p-0 border border-cyan-900/50 overflow-hidden">
+                <div className="bg-[#1e293b] rounded-xl p-0 border border-cyan-900/50 overflow-hidden shadow-sm shrink-0">
                     <div className="bg-slate-800/50 p-3 border-b border-slate-700 flex items-center gap-2">
                         <Activity className="w-4 h-4 text-green-400" />
                         <h3 className="text-sm font-bold text-slate-200">Đại lượng đo đạc</h3>
@@ -426,7 +461,7 @@ export default function SimplePendulum() {
                 </div>
 
                 {/* ENERGY MONITOR */}
-                <div className="bg-[#1e293b] rounded-xl p-4 border border-cyan-900/50">
+                <div className="bg-[#1e293b] rounded-xl p-4 border border-cyan-900/50 shadow-sm shrink-0">
                     <h3 className="text-amber-400 font-semibold mb-3 text-sm flex items-center gap-2">
                         <Zap size={14} /> Năng lượng
                     </h3>
@@ -460,9 +495,9 @@ export default function SimplePendulum() {
                 </div>
 
                 {/* FORMULAS */}
-                <div className="bg-[#16213e] rounded-lg p-4 border border-cyan-900/50">
+                <div className="bg-[#16213e] rounded-lg p-4 border border-cyan-900/50 shadow-sm shrink-0">
                     <h3 className="text-cyan-400 font-semibold mb-2 flex items-center gap-2 text-sm"><Anchor size={14} /> Công thức</h3>
-                    <div className="text-xs text-gray-300 space-y-1 font-mono">
+                    <div className="text-xs md:text-sm text-gray-300 space-y-1 font-mono">
                         <p>l: Chiều dài từ điểm treo đến tâm vật</p>
                         <p className="text-slate-500">Điều kiện: α₀ ≤ 10°</p>
                         <div className="w-full h-[1px] bg-slate-700 my-2"></div>

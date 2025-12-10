@@ -349,15 +349,18 @@ export default function PhysicsLab() {
         {/* CONTENT AREA */}
         <main
           ref={mainContentRef}
-          className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent pr-2 pb-10"
+          className="flex-1 flex flex-col overflow-hidden relative bg-slate-50 dark:bg-[#02040a]"
         >
           {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
 
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
+          <div className={`animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 h-full w-full ${["spring-oscillator", "simple-pendulum", "harmonic-oscillation", "mechanical-waves", "su-chuyen-the-html"].includes(activeTab) || customModules.find(m => m.id === activeTab)
+              ? "overflow-hidden"
+              : "overflow-y-auto overflow-x-hidden custom-scrollbar"
+            }`}>
             {renderContent()}
           </div>
         </main>
       </div>
-    </LabLayout>
+    </LabLayout >
   )
 }

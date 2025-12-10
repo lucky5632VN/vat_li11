@@ -391,12 +391,13 @@ export default function HarmonicOscillation() {
   const potentialEnergy = (0.5 * omega * omega * state.x * state.x) / 10000
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-2 space-y-4">
-        {/* Main Canvas Container */}
+    <div className="flex flex-col lg:flex-row h-full gap-4 p-4 lg:p-6 w-full">
+      {/* Left Main (Canvas + Controls) */}
+      <div className="flex-1 flex flex-col min-h-0 gap-4">
+        {/* Main Canvas Container - Grows to fill space */}
         <div
           ref={containerRef}
-          className="bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700/50 relative w-full h-[75vh] min-h-[550px]"
+          className="bg-[#1e293b] rounded-xl overflow-hidden border border-slate-700/50 relative flex-1 min-h-0"
         >
           {/* Controls Overlay */}
           <div className="absolute top-4 right-4 flex gap-2 z-10 bg-[#0f172a]/80 p-1 rounded-lg backdrop-blur-sm border border-slate-700">
@@ -423,37 +424,38 @@ export default function HarmonicOscillation() {
           <canvas ref={canvasRef} className="w-full h-full block" />
         </div>
 
-        {/* Playback Controls */}
-        <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex flex-wrap items-center justify-center gap-3">
-          <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
+        {/* Playback Controls - Fixed at bottom */}
+        <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex flex-wrap items-center justify-center gap-3 shrink-0 shadow-sm z-10">
+          <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0">
             <RotateCcw size={16} />
           </button>
-          <div className="w-[1px] h-8 bg-slate-700 mx-1"></div>
-          <button onClick={() => handleSkip(-1)} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
+          <div className="w-[1px] h-8 bg-slate-700 mx-1 shrink-0"></div>
+          <button onClick={() => handleSkip(-1)} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0">
             <SkipBack size={16} />
           </button>
-          <button onClick={() => handleMicroStep(-1)} className="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 flex items-center justify-center transition-all shadow-md active:scale-95 ring-1 ring-slate-700/50">
+          <button onClick={() => handleMicroStep(-1)} className="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 flex items-center justify-center transition-all shadow-md active:scale-95 ring-1 ring-slate-700/50 shrink-0">
             <ChevronLeft size={24} />
           </button>
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent mx-2 ${isPlaying ? "bg-amber-500 hover:bg-amber-400 shadow-amber-900/20" : "bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30"
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent mx-2 shrink-0 ${isPlaying ? "bg-amber-500 hover:bg-amber-400 shadow-amber-900/20" : "bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30"
               } text-white`}
           >
             {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
           </button>
-          <button onClick={() => handleMicroStep(1)} className="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 flex items-center justify-center transition-all shadow-md active:scale-95 ring-1 ring-slate-700/50">
+          <button onClick={() => handleMicroStep(1)} className="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 flex items-center justify-center transition-all shadow-md active:scale-95 ring-1 ring-slate-700/50 shrink-0">
             <ChevronRight size={24} />
           </button>
-          <button onClick={() => handleSkip(1)} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95">
+          <button onClick={() => handleSkip(1)} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0">
             <SkipForward size={16} />
           </button>
         </div>
       </div>
 
-      <div className="space-y-4">
+      {/* Right Sidebar - Scrollable */}
+      <div className="lg:w-80 flex-none flex flex-col gap-4 overflow-y-auto pr-1 pb-2 custom-scrollbar lg:h-full">
         {/* Parameters */}
-        <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-700/50">
+        <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-700/50 shadow-sm shrink-0">
           <h3 className="text-cyan-400 font-semibold mb-4 text-sm">Thông số dao động</h3>
           <div className="space-y-4">
             <div>
@@ -488,7 +490,7 @@ export default function HarmonicOscillation() {
         </div>
 
         {/* Energy */}
-        <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-700/50">
+        <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-700/50 shadow-sm shrink-0">
           <h3 className="text-amber-400 font-semibold mb-3 text-sm flex items-center gap-2">
             <Zap size={14} /> Năng lượng
           </h3>
@@ -521,7 +523,7 @@ export default function HarmonicOscillation() {
           </div>
         </div>
 
-        <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-700/50">
+        <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-700/50 shadow-sm shrink-0">
           <h3 className="text-cyan-400 font-semibold mb-2 text-sm">Công thức</h3>
           <div className="text-xs text-slate-300 space-y-1 font-mono">
             <p className="flex justify-between"><span>x = A·cos(ωt + φ)</span> <span className="text-red-400">Li độ</span></p>
