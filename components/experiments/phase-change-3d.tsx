@@ -149,8 +149,9 @@ const RAW_HTML = `<!DOCTYPE html>
     <div id="bigTempDisplay" class="fixed top-6 right-28 text-6xl font-bold text-white drop-shadow-lg hidden transition-transform z-40 font-mono pointer-events-none">0°C</div>
     <div class="gesture-guide">
         <div class="mb-2 font-bold text-cyan-400 flex items-center"><span class="status-dot" id="status-dot"></span> ĐIỀU KHIỂN TAY</div>
-        <div class="gesture-item"><span class="gesture-icon">👐</span><div><strong>2 Tay</strong><div class="text-xs text-slate-400">Kéo ra/vào để Zoom</div></div></div>
-        <div class="gesture-item"><span class="gesture-icon">👌</span><div><strong>Chụm (Kiểu L)</strong><div class="text-xs text-slate-400">Độ mở ngón => Nhiệt độ</div></div></div>
+        <div class="gesture-item"><span class="gesture-icon">✊</span><div><strong>Nắm tay</strong><div class="text-xs text-slate-400">Gia nhiệt / Tiếp tục</div></div></div>
+        <div class="gesture-item"><span class="gesture-icon">🖐</span><div><strong>Bỏ tay</strong><div class="text-xs text-slate-400">Tạm dừng</div></div></div>
+        <div class="gesture-item"><span class="gesture-icon">👌</span><div><strong>Chụm (Kiểu L)</strong><div class="text-xs text-slate-400">Kéo ra/vào để Zoom</div></div></div>
         <div class="gesture-item"><span class="gesture-icon">🖐</span><div><strong>Mở tay</strong><div class="text-xs text-slate-400">Di chuyển để xoay</div></div></div>
         <div id="gesture-debug" class="mt-2 text-xs font-mono text-cyan-200 h-4"></div>
     </div>
@@ -267,6 +268,24 @@ const RAW_HTML = `<!DOCTYPE html>
                 lucide.createIcons(); visualMeltProgress = 0; visualBoilProgress = 0;
             }
         }
+        function pauseHeating() {
+            isHeating = false;
+            els.btnHeat.innerHTML = '<i data-lucide="play-circle" class="w-5 h-5"></i> Tiếp tục';
+            els.tempSlider.disabled = false;
+        }
+
+        function startHeatingGesture() {
+            if(!isHeating) {
+                 isHeating = true;
+                 els.btnHeat.innerHTML = '<i data-lucide="stop-circle" class="w-5 h-5"></i> Dừng';
+                 els.tempSlider.disabled = true;
+                 if (graphData.length === 0) {
+                     currentTemp = currentMat.range[0]; currentQ = 0;
+                     graphData = [{ t: 0, T: currentTemp }];
+                 }
+            }
+        }
+
         function updatePhysics() {
             if (!isHeating) return;
             const dt = 0.5; simTime += dt; const dQ = 5;
@@ -470,30 +489,39 @@ const RAW_HTML = `<!DOCTYPE html>
         function onResults(results) {
             if (!handTrackingEnabled) return;
             statusDot.classList.remove('active'); videoElement.classList.remove('active'); debugText.innerText = "No Hand";
+            
+            // Should stop heating if hand is removed
+            if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+                 if(isHeating) pauseHeating();
+                 return;
+            }
+
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 statusDot.classList.add('active'); videoElement.classList.add('active');
-                const numHands = results.multiHandLandmarks.length;
-                if (numHands === 2) {
-                    const h1 = results.multiHandLandmarks[0][9]; const h2 = results.multiHandLandmarks[1][9];
-                    const distHands = Math.hypot(h1.x - h2.x, h1.y - h2.y);
-                    const t = (Math.max(0.1, Math.min(0.8, distHands)) - 0.1) / 0.7;
-                    const targetDist = 40 - (t * 35);
-                    const currentDist = camera.position.distanceTo(controls.target);
-                    const newDist = currentDist + (targetDist - currentDist) * 0.1;
-                    const dir = new THREE.Vector3().copy(camera.position).sub(controls.target).normalize();
-                    camera.position.copy(controls.target).add(dir.multiplyScalar(newDist));
-                    debugText.innerText = "👐 ZOOM 2 HAND";
-                    return;
-                }
                 const lm = results.multiHandLandmarks[0]; const g = getGesture(lm);
                 const handX = 1 - lm[9].x; const handY = lm[9].y;
+
+                // FIST -> RUN HEATING (RESUME) / OPEN -> PAUSE
+                if (g.isFist) {
+                    startHeatingGesture();
+                    debugText.innerText = "✊ GIA NHIỆT";
+                } else {
+                    if (isHeating) pauseHeating();
+                }
+
+                // L-PINCH -> ZOOM
                 if (g.isLControl) {
                     const pinchGap = g.pinchDist; const minP = 0.02; const maxP = 0.20;
                     const percent = Math.max(0, Math.min(1, (pinchGap - minP) / (maxP - minP)));
-                    const minT = parseInt(els.tempSlider.min); const maxT = parseInt(els.tempSlider.max);
-                    const val = minT + (maxT - minT) * percent;
-                    els.tempSlider.value = val; updateSimulationState();
-                    debugText.innerText = "👌 TEMP CTRL";
+                    
+                    // Zoom logic: Closer pinch = Zoom In (smaller dist), Wider pinch = Zoom Out (larger dist)
+                    const minDist = 10; const maxDist = 35;
+                    const targetDist = maxDist - (percent * (maxDist - minDist));
+                    
+                    const dir = new THREE.Vector3().copy(camera.position).sub(controls.target).normalize();
+                    camera.position.copy(controls.target).add(dir.multiplyScalar(targetDist));
+                    
+                    debugText.innerText = "👌 ZOOM (L)";
                 } else if (g.isOpen) {
                     debugText.innerText = "🔄 ROTATE";
                     const dx = handX - prevHandPos.x; const dy = handY - prevHandPos.y;

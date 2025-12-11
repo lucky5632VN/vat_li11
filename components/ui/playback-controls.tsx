@@ -1,61 +1,85 @@
-"use client"
-
-import { Play, Pause, SkipForward, RotateCcw } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import React from "react"
+import { Play, Pause, RotateCcw, SkipBack, SkipForward, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface PlaybackControlsProps {
   isPlaying: boolean
-  onPlay: () => void
-  onPause: () => void
-  onStep: () => void
+  onPlayPause: () => void
   onReset: () => void
+  onStepForward?: () => void
+  onStepBackward?: () => void
+  onSkipForward?: () => void // Optional for larger jumps or fixed intervals
+  onSkipBackward?: () => void
+  disabled?: boolean
 }
 
-export default function PlaybackControls({ isPlaying, onPlay, onPause, onStep, onReset }: PlaybackControlsProps) {
-  return (
-    <div className="flex items-center justify-center gap-2 bg-[#16213e] rounded-lg p-3 border border-cyan-900/50">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onReset}
-        className="bg-gray-700 border-gray-600 hover:bg-gray-600 text-white"
-      >
-        <RotateCcw className="h-4 w-4" />
-      </Button>
+export function PlaybackControls({
+  isPlaying,
+  onPlayPause,
+  onReset,
+  onStepForward,
+  onStepBackward,
+  onSkipForward,
+  onSkipBackward,
+  disabled = false
+}: PlaybackControlsProps) {
+  const btnClass = "w-10 h-10 rounded-xl bg-[#1e293b] hover:bg-[#334155] border border-slate-700/50 text-slate-300 flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group"
+  const iconClass = "w-5 h-5 text-slate-400 group-hover:text-white transition-colors"
 
-      {isPlaying ? (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onPause}
-          className="bg-yellow-600 border-yellow-500 hover:bg-yellow-500 text-white"
-        >
-          <Pause className="h-4 w-4" />
-        </Button>
-      ) : (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onPlay}
-          className="bg-green-600 border-green-500 hover:bg-green-500 text-white"
-        >
-          <Play className="h-4 w-4" />
-        </Button>
+  return (
+    <div className="bg-[#0f172a]/60 backdrop-blur-md p-2 rounded-2xl border border-slate-700/50 flex items-center gap-2 inline-flex shadow-lg">
+      {/* Reset */}
+      <button onClick={onReset} className={btnClass} title="Làm mới">
+        <RotateCcw className={iconClass} />
+      </button>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-slate-700 mx-1" />
+
+      {/* Skip Back (Large Step) */}
+      {onSkipBackward && (
+        <button onClick={onSkipBackward} disabled={disabled} className={btnClass} title="Lùi nhanh">
+          <SkipBack className={iconClass} />
+        </button>
       )}
 
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onStep}
-        disabled={isPlaying}
-        className="bg-cyan-600 border-cyan-500 hover:bg-cyan-500 text-white disabled:opacity-50"
-      >
-        <SkipForward className="h-4 w-4" />
-      </Button>
+      {/* Step Back (Small Step) */}
+      {onStepBackward && (
+        <button onClick={onStepBackward} disabled={disabled} className={btnClass} title="Lùi bước">
+          <ChevronLeft className={iconClass} />
+        </button>
+      )}
 
-      <span className="text-gray-400 text-sm ml-4">
-        {isPlaying ? "Đang chạy" : "Tạm dừng"} | Bấm Step để tiến từng khung hình
-      </span>
+      {/* Play/Pause Main Button */}
+      <button
+        onClick={onPlayPause}
+        disabled={disabled}
+        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 mx-1
+                    ${isPlaying
+            ? 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/20'
+            : 'bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/20'
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        title={isPlaying ? "Tạm dừng" : "Phát"}
+      >
+        {isPlaying ? (
+          <Pause className="w-7 h-7 text-white fill-current" />
+        ) : (
+          <Play className="w-7 h-7 text-white fill-current ml-1" />
+        )}
+      </button>
+
+      {/* Step Forward (Small Step) */}
+      {onStepForward && (
+        <button onClick={onStepForward} disabled={disabled} className={btnClass} title="Tiến bước">
+          <ChevronRight className={iconClass} />
+        </button>
+      )}
+
+      {/* Skip Forward (Large Step) */}
+      {onSkipForward && (
+        <button onClick={onSkipForward} disabled={disabled} className={btnClass} title="Tiến nhanh">
+          <SkipForward className={iconClass} />
+        </button>
+      )}
     </div>
   )
 }

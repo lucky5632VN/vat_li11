@@ -136,14 +136,18 @@ const StandingWaveSim = () => {
       let shape = 0;
 
       if (mode === 'fixed-fixed') {
-        // Wave function satisfying y(L)=0
-        // y(x) = sin(k(L-x))
-        // Amplitude scaled to match y(0) = A_source
-        shape = Math.sin(kWave * (length - xPhysical));
+        // Wave function with Node at A (x=0)
+        // To satisfy visual "Fixed End" at B (x=L) even off-resonance:
+        // We apply a linear shear to force y(L) = 0
+        const rawShape = Math.sin(kWave * xPhysical);
+        const valAtLength = Math.sin(kWave * length);
+        const correction = valAtLength * (xPhysical / length);
+        shape = rawShape - correction;
       } else {
-        // Wave function satisfying y'(L)=0 (Free End)
-        // y(x) = cos(k(L-x))
-        shape = Math.cos(kWave * (length - xPhysical));
+        // Fixed-Free: A is Node. B is Free.
+        // y(x) = sin(kx)
+        // B will oscillate (Antinode-ish), which is correct for Free end.
+        shape = Math.sin(kWave * xPhysical);
       }
 
       // Resulting Wave

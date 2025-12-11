@@ -24,7 +24,7 @@ export default function SimplePendulum() {
     // History for Energy Graph
     const energyHistoryRef = useRef<{ t: number, wd: number, wt: number, w: number }[]>([])
 
-    const animationRef = useRef<number>()
+    const animationRef = useRef<number | undefined>(undefined)
     const timeRef = useRef(0)
 
     // Physics Calculations
@@ -152,13 +152,27 @@ export default function SimplePendulum() {
             ctx.strokeStyle = color
             ctx.lineWidth = 2
             ctx.beginPath()
-            const dataToDraw = history.slice(-300)
-            const stepX = w / 300
 
-            dataToDraw.forEach((pt, i) => {
-                const x = i * stepX
+            // Time Window Logic (Matched with Spring Oscillator)
+            const timeWindow = 5.0
+            const endTime = history[history.length - 1].t
+            // Start from t=0 initially so graph grows Left -> Right
+            const startTime = endTime < timeWindow ? 0 : endTime - timeWindow
+
+            let started = false
+
+            history.forEach((pt) => {
+                if (pt.t < startTime) return
+
+                const timeOffset = pt.t - startTime
+                const x = (timeOffset / timeWindow) * w
                 const y = h - 10 - (pt[key] * yScale)
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+
+                if (!started) {
+                    ctx.moveTo(x, y)
+                    started = true
+                }
+                else ctx.lineTo(x, y)
             })
             ctx.stroke()
         }
@@ -167,11 +181,15 @@ export default function SimplePendulum() {
         drawLine('wd', '#22c55e')
         drawLine('w', '#eab308')
 
-        // Draw Leading Dots (Current Value Indicators)
+        // Draw Leading Dots (Need to match Time-based X)
         if (history.length > 0) {
             const lastPt = history[history.length - 1]
-            const stepX = w / 300
-            const x = (history.length - 1) * stepX // Should be roughly w if full
+            const timeWindow = 5.0
+            const endTime = lastPt.t
+            const startTime = endTime < timeWindow ? 0 : endTime - timeWindow
+
+            const timeOffset = lastPt.t - startTime
+            const x = (timeOffset / timeWindow) * w
 
             const drawDot = (key: 'wd' | 'wt' | 'w', color: string) => {
                 const y = h - 10 - (lastPt[key] * yScale)
@@ -228,7 +246,7 @@ export default function SimplePendulum() {
         }
 
         drawSim(ctx, timeRef.current)
-        if (energyCanvasRef.current) drawEnergyGraph(energyCanvasRef.current.getContext("2d")!)
+        if (energyCanvasRef.current) drawEnergyGraph(energyCanvasRef.current.getContext("2d")!, timeRef.current)
 
     }, [isPlaying, drawSim, drawEnergyGraph, calculateState, params, dt])
 
@@ -250,7 +268,7 @@ export default function SimplePendulum() {
     useEffect(() => {
         if (!isPlaying && canvasRef.current && energyCanvasRef.current) {
             drawSim(canvasRef.current.getContext("2d")!, timeRef.current)
-            drawEnergyGraph(energyCanvasRef.current.getContext("2d")!)
+            drawEnergyGraph(energyCanvasRef.current.getContext("2d")!, timeRef.current)
         }
     }, [params, drawSim, drawEnergyGraph, isPlaying])
 
@@ -271,7 +289,7 @@ export default function SimplePendulum() {
                 energyCanvasRef.current.height = height
 
                 // Redraw Energy
-                drawEnergyGraph(energyCanvasRef.current.getContext("2d")!)
+                drawEnergyGraph(energyCanvasRef.current.getContext("2d")!, timeRef.current)
             }
         }
 
@@ -283,7 +301,28 @@ export default function SimplePendulum() {
 
     const handleStep = (dir: number) => {
         setIsPlaying(false)
-        timeRef.current = Math.max(0, timeRef.current + dir * 0.05)
+        timeRef.current = Math.max(0, timeRef.current + dir * 0.01)
+
+        if (dir < 0) {
+            // Rewind: Truncate history
+            energyHistoryRef.current = energyHistoryRef.current.filter(pt => pt.t <= timeRef.current)
+        } else {
+            // Forward: Calculate and Push History manually since loop is paused
+            const state = calculateState(timeRef.current)
+            const l_m = params.length / 100
+            const thetaMaxRad = (params.initialAngle * Math.PI) / 180
+
+            const h_max = l_m * (1 - Math.cos(thetaMaxRad))
+            const W_total = params.mass * params.gravity * h_max
+
+            const h_current = l_m * (1 - Math.cos(state.theta))
+            const wt = params.mass * params.gravity * h_current
+            const wd = Math.max(0, W_total - wt)
+
+            energyHistoryRef.current.push({ t: timeRef.current, wd, wt, w: W_total })
+            if (energyHistoryRef.current.length > 300) energyHistoryRef.current.shift()
+        }
+
         setTime(timeRef.current)
         // Draw will be updated by loop or effect
     }
@@ -362,7 +401,7 @@ export default function SimplePendulum() {
                                     value={params.length}
                                     onChange={(e) => {
                                         setParams(p => ({ ...p, length: Number(e.target.value) }))
-                                        energyHistoryRef.current = []
+                                        handleReset()
                                     }}
                                     className="flex-1 h-2 bg-slate-700 rounded-lg cursor-pointer accent-cyan-500"
                                 />
@@ -380,7 +419,7 @@ export default function SimplePendulum() {
                                     value={params.gravity}
                                     onChange={(e) => {
                                         setParams(p => ({ ...p, gravity: Number(e.target.value) }))
-                                        energyHistoryRef.current = []
+                                        handleReset()
                                     }}
                                     className="flex-1 h-2 bg-slate-700 rounded-lg cursor-pointer accent-cyan-500"
                                 />
@@ -397,7 +436,7 @@ export default function SimplePendulum() {
                                     value={params.initialAngle}
                                     onChange={(e) => {
                                         setParams(p => ({ ...p, initialAngle: Number(e.target.value) }))
-                                        energyHistoryRef.current = []
+                                        handleReset()
                                     }}
                                     className="flex-1 h-2 bg-slate-700 rounded-lg cursor-pointer accent-cyan-500"
                                 />
@@ -415,7 +454,7 @@ export default function SimplePendulum() {
                                     value={params.mass}
                                     onChange={(e) => {
                                         setParams(p => ({ ...p, mass: Number(e.target.value) }))
-                                        energyHistoryRef.current = []
+                                        handleReset()
                                     }}
                                     className="flex-1 h-2 bg-slate-700 rounded-lg cursor-pointer accent-cyan-500"
                                 />

@@ -260,8 +260,8 @@ export default function PhysicsIntro({ onSelectExperiment }: { onSelectExperimen
           <div className="min-h-[80px] text-slate-500 dark:text-slate-400 text-base md:text-lg mb-8 leading-relaxed font-mono border-l-[3px] border-cyan-400 dark:border-cyan-500/50 pl-4 py-1 bg-white/40 dark:bg-transparent rounded-r-lg">
             <span className="text-cyan-600 dark:text-cyan-400 mr-2 font-bold">{'>'}</span>
             <Typewriter
-              text="Hệ thống mô phỏng tương tác cao cấp dành cho Vật lý 11. Truy cập dữ liệu thời gian thực, đồ thị năng lượng và các tham số vật lý chính xác..."
-              speed={20}
+              text="Hệ thống mô phỏng thí nghiệm ảo thế hệ mới dành cho Vật lý 11, mang đến trải nghiệm học tập immersive chưa từng có. Tương tác trực tiếp với các hiện tượng vật lý qua mô hình 3D sống động, phân tích dữ liệu thời gian thực và đồ thị năng lượng chính xác đến từng micro-giây. Khám phá thế giới của Dao động cơ, Sóng cơ và Âm học với các công cụ đo đạc chuyên sâu, giúp biến các khái niệm trừu tượng trở nên trực quan sinh động. Hãy sẵn sàng để chạm vào kiến thức và làm chủ công nghệ!"
+              speed={15}
               delay={500}
             />
           </div>

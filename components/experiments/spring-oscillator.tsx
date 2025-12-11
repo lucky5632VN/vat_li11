@@ -5,10 +5,11 @@ import ControlPanel from "../ui/control-panel"
 import { TrendingUp, Ruler, Activity, RotateCcw, SkipBack, Play, Pause, SkipForward, SplitSquareHorizontal, Square } from "lucide-react"
 import { useSpringPhysics } from "@/hooks/use-spring-physics"
 import OscillatorView from "./oscillator-view"
+import { PlaybackControls } from "@/components/ui/playback-controls"
 
 export default function SpringOscillator() {
   const energyCanvasRef = useRef<HTMLCanvasElement>(null)
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | undefined>(undefined)
 
   const [layout, setLayout] = useState<"horizontal" | "vertical">("horizontal")
   const [mode, setMode] = useState<"single" | "compare">("single")
@@ -33,13 +34,13 @@ export default function SpringOscillator() {
   }
 
   const stepForward = () => {
-    sys1.step(0.05)
-    sys2.step(0.05)
+    sys1.step(0.01)
+    sys2.step(0.01)
   }
 
   const stepBackward = () => {
-    sys1.step(-0.05)
-    sys2.step(-0.05)
+    sys1.step(-0.01)
+    sys2.step(-0.01)
   }
 
   const activeSys = activeTab === "system1" ? sys1 : sys2
@@ -47,62 +48,85 @@ export default function SpringOscillator() {
 
   // Energy Graph Drawing
   const drawEnergyGraph = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
+    (ctx: CanvasRenderingContext2D, currentTime: number) => {
       const w = ctx.canvas.width
       const h = ctx.canvas.height
-
-      const history = activeSys.historyRef.current
       const params = activeSys.params
 
-      // Transparent Background for Overlay
+      // Transparent Background
       ctx.clearRect(0, 0, w, h)
-      ctx.fillStyle = "rgba(15, 23, 42, 0.4)" // Semi-transparent
+      ctx.fillStyle = "rgba(15, 23, 42, 0.4)"
       ctx.fillRect(0, 50, w, h - 50)
 
       // Grid
-      ctx.strokeStyle = "#1e293b"
-      ctx.lineWidth = 0.5
-      ctx.beginPath()
-      for (let x = 0; x < w; x += 50) {
-        ctx.moveTo(x, 0)
-        ctx.lineTo(x, h)
-      }
-      for (let y = 50; y < h - 10; y += 30) { // Adjusted grid to fit new fillRect area
-        ctx.moveTo(0, y)
-        ctx.lineTo(w, y)
-      }
+      ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 0.5; ctx.beginPath()
+      for (let x = 0; x < w; x += 50) { ctx.moveTo(x, 0); ctx.lineTo(x, h) }
+      for (let y = 50; y < h - 10; y += 30) { ctx.moveTo(0, y); ctx.lineTo(w, y) }
       ctx.stroke()
 
-      if (history.length < 2) return
+      // Time Window
+      const timeWindow = 5.0
+      const endTime = currentTime
+      const startTime = endTime < timeWindow ? 0 : endTime - timeWindow
 
-      // Use a fixed reference for max energy based on Max Amplitude (100cm)
-      const maxAmpMeters = 1.0 // 100cm
+      // Analytic Points Generation
+      // Calculate physics state for ~300 points in the view window
+      // This ensures smooth curves regardless of step size or history usage
+      const points: { t: number, wt: number, wd: number, wTotal: number }[] = []
+      const steps = 300
+      const duration = Math.max(0, endTime - startTime)
+
+      if (duration > 0 || currentTime === 0) {
+        for (let i = 0; i <= steps; i++) {
+          const t = startTime + (duration * (i / steps))
+          const state = activeSys.calculateState(t)
+          points.push({ t, wt: state.wt, wd: state.wd, wTotal: state.wTotal })
+        }
+      }
+
+      // Scaling
+      // Max Ref Energy based on Max Amplitude (1m)
+      const maxAmpMeters = 1.0
       const maxRefEnergy = 0.5 * params.k * Math.pow(maxAmpMeters, 2)
-
-      // Scale so that Max Ref Energy hits 90% of height
-      const graphHeight = h - 60 // Total height for graph lines, leaving 50px for top label and 10px for bottom padding
+      const graphHeight = h - 60
       const yScale = maxRefEnergy > 0 ? (graphHeight * 0.9) / maxRefEnergy : 1
 
-      const drawLine = (key: keyof typeof history[0], color: string) => {
-        ctx.strokeStyle = color
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        const stepX = w / 300
-        const dataSlice = history.slice(-300)
+      // Draw Lines
+      const drawLine = (key: 'wt' | 'wd' | 'wTotal', color: string) => {
+        if (points.length < 2) return
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath()
 
-        dataSlice.forEach((pt, i) => {
-          const val = pt[key] as number
-          const x = i * stepX
-          const y = h - 10 - val * yScale // 10px padding bottom, graph starts from bottom
-          if (i === 0) ctx.moveTo(x, y)
+        let started = false
+        points.forEach(pt => {
+          const timeOffset = pt.t - startTime
+          const x = (timeOffset / timeWindow) * w
+          const y = h - 10 - (pt[key] * yScale)
+
+          if (!started) { ctx.moveTo(x, y); started = true }
           else ctx.lineTo(x, y)
         })
         ctx.stroke()
       }
 
-      drawLine("wd", "#22c55e")
       drawLine("wt", "#3b82f6")
+      drawLine("wd", "#22c55e")
       drawLine("wTotal", "#eab308")
+
+      // Leading Dots
+      if (points.length > 0) {
+        const lastPt = points[points.length - 1]
+        const timeOffset = lastPt.t - startTime
+        const x = (timeOffset / timeWindow) * w
+
+        const drawDot = (key: 'wt' | 'wd' | 'wTotal', color: string) => {
+          const y = h - 10 - (lastPt[key] * yScale)
+          ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill()
+          ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke()
+        }
+        drawDot("wt", "#3b82f6")
+        drawDot("wd", "#22c55e")
+        drawDot("wTotal", "#eab308")
+      }
 
       // Legend
       ctx.font = "10px monospace"
@@ -110,7 +134,7 @@ export default function SpringOscillator() {
       ctx.fillStyle = "#22c55e"; ctx.fillText("Động năng", 70, h - 35)
       ctx.fillStyle = "#3b82f6"; ctx.fillText("Thế năng", 140, h - 35)
     },
-    [activeSys, activeTab]
+    [activeSys]
   )
 
   // Stable Animation Loop Pattern
@@ -122,9 +146,9 @@ export default function SpringOscillator() {
 
     if (energyCanvasRef.current) {
       const ctx = energyCanvasRef.current.getContext("2d")
-      if (ctx) drawEnergyGraph(ctx)
+      if (ctx) drawEnergyGraph(ctx, sys1.time) // Assuming sys1 is master time or activeSys.time
     }
-  }, [sys1.isPlaying, sys1.step, sys2.step, drawEnergyGraph])
+  }, [sys1.isPlaying, sys1.step, sys2.step, drawEnergyGraph, sys1.time])
   // Note: relying on sys1.step stable identity. using sys1.isPlaying value. 
   // If we used [sys1], it would change every frame.
   // sys1.step is stable. sys1.isPlaying changes only on user interaction.
@@ -211,25 +235,13 @@ export default function SpringOscillator() {
 
         {/* UNIFIED CONTROLS - Fixed at bottom */}
         <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex items-center justify-center gap-3 shrink-0 shadow-sm z-10">
-          <button onClick={handleReset} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Reset">
-            <RotateCcw size={18} />
-          </button>
-          <button onClick={stepBackward} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Lùi">
-            <SkipBack size={18} />
-          </button>
-          <button
-            onClick={togglePlay}
-            className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent shrink-0 ${isPlaying
-              ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/20"
-              : "bg-cyan-600 hover:bg-cyan-500 shadow-cyan-500/30"
-              } text-white`}
-            title={isPlaying ? "Dừng" : "Chạy"}
-          >
-            {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
-          </button>
-          <button onClick={stepForward} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Tiến">
-            <SkipForward size={18} />
-          </button>
+          <PlaybackControls
+            isPlaying={isPlaying}
+            onPlayPause={togglePlay}
+            onReset={handleReset}
+            onStepForward={stepForward}
+            onStepBackward={stepBackward}
+          />
         </div>
       </div>
 
@@ -240,8 +252,18 @@ export default function SpringOscillator() {
 
           {/* Layout Selection */}
           <div className="flex gap-2 mb-4">
-            <button onClick={() => setLayout("horizontal")} className={`flex-1 py-2 rounded border text-xs font-bold uppercase ${layout === "horizontal" ? "bg-slate-700 border-slate-500 text-white" : "border-transparent bg-slate-800 text-slate-400"}`}>Nằm ngang</button>
-            <button onClick={() => setLayout("vertical")} className={`flex-1 py-2 rounded border text-xs font-bold uppercase ${layout === "vertical" ? "bg-slate-700 border-slate-500 text-white" : "border-transparent bg-slate-800 text-slate-400"}`}>Thẳng đứng</button>
+            <button
+              onClick={() => { setLayout("horizontal"); handleReset() }}
+              className={`flex-1 py-2 rounded border text-xs font-bold uppercase ${layout === "horizontal" ? "bg-slate-700 border-slate-500 text-white" : "border-transparent bg-slate-800 text-slate-400"}`}
+            >
+              Nằm ngang
+            </button>
+            <button
+              onClick={() => { setLayout("vertical"); handleReset() }}
+              className={`flex-1 py-2 rounded border text-xs font-bold uppercase ${layout === "vertical" ? "bg-slate-700 border-slate-500 text-white" : "border-transparent bg-slate-800 text-slate-400"}`}
+            >
+              Thẳng đứng
+            </button>
           </div>
 
           {/* System Tabs (Only in Compare Mode) */}

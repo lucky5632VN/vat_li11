@@ -16,7 +16,7 @@ export default function MechanicalWaves() {
     frequency: 0.5,
   })
 
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | undefined>(undefined)
   const timeRef = useRef(0)
 
   const omega = 2 * Math.PI * params.frequency
@@ -165,9 +165,9 @@ export default function MechanicalWaves() {
       ctx.fillStyle = "#4ade80"
       ctx.font = "13px monospace"
       ctx.fillText(`t = ${t.toFixed(2)} s`, 20, height - 80)
-      ctx.fillText(`λ = ${params.wavelength} px`, 20, height - 60)
+      ctx.fillText(`λ = ${params.wavelength} cm`, 20, height - 60)
       ctx.fillText(`f = ${params.frequency} Hz`, 20, height - 40)
-      ctx.fillText(`v = ${velocity.toFixed(0)} px/s`, 20, height - 20)
+      ctx.fillText(`v = ${velocity.toFixed(0)} cm/s`, 20, height - 20)
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.15)"
       ctx.font = "12px monospace"
@@ -349,7 +349,7 @@ export default function MechanicalWaves() {
             <div>
               <div className="flex justify-between text-xs mb-1.5 align-baseline">
                 <label className="text-slate-400 font-medium">Biên độ A</label>
-                <span className="text-cyan-400 font-mono bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700/50">{params.amplitude} px</span>
+                <span className="text-cyan-400 font-mono bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700/50">{params.amplitude} cm</span>
               </div>
               <input
                 type="range"
@@ -363,7 +363,7 @@ export default function MechanicalWaves() {
             <div>
               <div className="flex justify-between text-xs mb-1.5 align-baseline">
                 <label className="text-slate-400 font-medium">Bước sóng λ</label>
-                <span className="text-cyan-400 font-mono bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700/50">{params.wavelength} px</span>
+                <span className="text-cyan-400 font-mono bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700/50">{params.wavelength} cm</span>
               </div>
               <input
                 type="range"
@@ -396,8 +396,8 @@ export default function MechanicalWaves() {
           <h3 className="text-cyan-400 font-semibold mb-2 text-sm uppercase tracking-wider">Công thức</h3>
           <div className="text-xs text-slate-300 space-y-1.5 font-mono bg-slate-900/30 p-2 rounded border border-slate-800">
             <p>y = A·sin(kx - ωt)</p>
-            <p>v = λf = {velocity.toFixed(0)} px/s</p>
-            <p>k = 2π/λ = {k.toFixed(3)} rad/px</p>
+            <p>v = λf = {velocity.toFixed(0)} cm/s</p>
+            <p>k = 2π/λ = {k.toFixed(3)} rad/cm</p>
             <p>ω = 2πf = {omega.toFixed(2)} rad/s</p>
           </div>
         </div>

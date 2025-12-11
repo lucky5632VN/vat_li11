@@ -25,7 +25,7 @@ export default function HarmonicOscillation() {
     phase: 0,         // rad
   })
 
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | undefined>(undefined)
   const timeRef = useRef(0)
 
   const omega = 2 * Math.PI * params.frequency
@@ -63,7 +63,7 @@ export default function HarmonicOscillation() {
       // 3. Max amplitude (150cm) must fit in view.
 
       // Define visual constraints
-      const PADDING = 40
+      const PADDING = 80 // Increased padding to prevent circle from touching edges/UI
       const MAX_PHYSICAL_AMPLITUDE = 150 // Matches slider max
       const safeHeight = h - PADDING * 2
 
@@ -75,7 +75,8 @@ export default function HarmonicOscillation() {
       const visualRadius = params.amplitude * pixelsPerCm
 
       // Layout Layout
-      const isSmallScreen = w < 800
+      // Reduce breakpoint to 500 to keep side-by-side layout even when sidebar is open
+      const isSmallScreen = w < 500
       // Ensure circle section is wide enough for the circle + margin
       const minCircleSection = visualRadius * 2 + 80
       const circleSectionWidth = isSmallScreen ? w : Math.max(300, minCircleSection)
@@ -127,14 +128,35 @@ export default function HarmonicOscillation() {
       ctx.fill()
 
       // Shadow projection to X-axis (to show relationship)
-      ctx.strokeStyle = "rgba(249, 115, 22, 0.3)"
+      ctx.strokeStyle = "rgba(249, 115, 22, 0.6)" // Made darker
       ctx.setLineDash([4, 4])
       ctx.beginPath()
       ctx.moveTo(vectorX, vectorY)
-      ctx.lineTo(vectorX, centerY) // Project vertically to horizontal diameter? 
-      // Wait, standard projection for x = A cos(wt) is usually onto the horizontal axis (x-axis)
+      ctx.lineTo(vectorX, centerY) // Project vertically to horizontal diameter
       ctx.stroke()
       ctx.setLineDash([])
+
+      // Projection Point (The Shadow)
+      ctx.fillStyle = "#ef4444" // Red like x(t)
+      ctx.beginPath()
+      ctx.arc(vectorX, centerY, 6, 0, 2 * Math.PI)
+      ctx.fill()
+      ctx.fillStyle = "#ef4444"
+      ctx.font = "bold 14px monospace"
+      ctx.fillText("x", vectorX, centerY + 20)
+
+
+      // Markers (-A, +A, VTCB)
+      ctx.fillStyle = "rgba(255, 255, 255, 0.5)"
+      ctx.font = "12px monospace"
+      ctx.textAlign = "center"
+      // -A
+      ctx.fillText("-A", centerX - visualRadius, centerY + 20)
+      // +A
+      ctx.fillText("+A", centerX + visualRadius, centerY + 20)
+      // VTCB (O)
+      ctx.fillText("O", centerX, centerY + 20)
+
 
       // --- GRAPH SECTION ---
 
@@ -261,21 +283,7 @@ export default function HarmonicOscillation() {
       ctx.textAlign = "right"
       ctx.fillText("Hô Hoàng Anh A1K50", w - 15, h - 15)
 
-      // Stats Info
-      const currentState = calculateState(t)
-      const infoWidth = 160
-      const infoHeight = 110
-      ctx.fillStyle = "rgba(15, 23, 42, 0.9)"
-      ctx.fillRect(10, 10, infoWidth, infoHeight)
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.3)"
-      ctx.strokeRect(10, 10, infoWidth, infoHeight)
-
-      ctx.font = "13px monospace"
-      ctx.textAlign = "left"
-      ctx.fillStyle = "#e2e8f0"; ctx.fillText(`t = ${t.toFixed(3)}s`, 20, 30)
-      ctx.fillStyle = "#ef4444"; ctx.fillText(`x = ${currentState.x.toFixed(2)} cm`, 20, 55)
-      ctx.fillStyle = "#22c55e"; ctx.fillText(`v = ${currentState.v.toFixed(2)} cm/s`, 20, 75)
-      ctx.fillStyle = "#3b82f6"; ctx.fillText(`a = ${currentState.a.toFixed(2)} cm/s²`, 20, 95)
+      // Stats Info - REMOVED -> Moved to HTML Overlay
     },
     [params.amplitude, params.phase, omega, calculateState, showGraph, T, width, height],
   )
@@ -334,7 +342,8 @@ export default function HarmonicOscillation() {
       draw(ctx, timeRef.current)
       ctx.restore()
     }
-  }, [isPlaying, draw, width, height, pixelRatio])
+    // Added 'time' dependency here to ensuring manual stepping triggers redraw
+  }, [isPlaying, draw, width, height, pixelRatio, time])
 
   const handleManualUpdate = (newTime: number) => {
     // setIsPlaying(false) // Don't force pause, just jump? The UI suggests these are transport controls.
@@ -419,6 +428,28 @@ export default function HarmonicOscillation() {
             >
               a(t)
             </button>
+          </div>
+
+          {/* Stats Info Overlay - Top Left (Compact, No Border) */}
+          <div className="absolute top-2 left-2 z-10 p-2 min-w-[130px]">
+            <div className="space-y-0.5 font-mono text-xs">
+              <div className="flex justify-between gap-2 text-slate-300">
+                <span>t =</span>
+                <span>{time.toFixed(3)}s</span>
+              </div>
+              <div className="flex justify-between gap-2 text-red-400 font-bold">
+                <span>x =</span>
+                <span>{state.x.toFixed(2)} cm</span>
+              </div>
+              <div className="flex justify-between gap-2 text-green-400 font-bold">
+                <span>v =</span>
+                <span>{state.v.toFixed(1)} cm/s</span>
+              </div>
+              <div className="flex justify-between gap-2 text-blue-400 font-bold">
+                <span>a =</span>
+                <span>{state.a.toFixed(0)} <span className="scale-75 inline-block origin-left">cm/s²</span></span>
+              </div>
+            </div>
           </div>
 
           <canvas ref={canvasRef} className="w-full h-full block" />

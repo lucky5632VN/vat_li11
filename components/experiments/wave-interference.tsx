@@ -79,7 +79,7 @@ export default function WaveInterference() {
     screenDistance: 2.0, // D (m)
   })
 
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | undefined>(undefined)
   const timeRef = useRef(0)
 
   // --- LOGIC SÓNG CƠ ---
@@ -576,14 +576,14 @@ export default function WaveInterference() {
                 <div className="group">
                   <div className="flex justify-between text-xs mb-1">
                     <label className="text-slate-300">Bước sóng (λ)</label>
-                    <span className="text-cyan-400 font-mono">{mechParams.wavelength} px</span>
+                    <span className="text-cyan-400 font-mono">{mechParams.wavelength} cm</span>
                   </div>
                   <input type="range" min="20" max="80" step="5" value={mechParams.wavelength} onChange={(e) => setMechParams({ ...mechParams, wavelength: Number(e.target.value) })} className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
                 </div>
                 <div className="group">
                   <div className="flex justify-between text-xs mb-1">
                     <label className="text-slate-300">Khoảng cách nguồn</label>
-                    <span className="text-cyan-400 font-mono">{mechParams.sourceDistance} px</span>
+                    <span className="text-cyan-400 font-mono">{mechParams.sourceDistance} cm</span>
                   </div>
                   <input type="range" min="40" max="250" step="10" value={mechParams.sourceDistance} onChange={(e) => setMechParams({ ...mechParams, sourceDistance: Number(e.target.value) })} className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500" />
                 </div>

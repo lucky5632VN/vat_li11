@@ -1,7 +1,8 @@
 "use client"
 
 import { useRef, useEffect, useState, useCallback } from "react"
-import { Play, Pause, RotateCcw, SkipBack, SkipForward, Activity, Settings, TrendingDown, Wind, Zap, Droplets, Hexagon } from "lucide-react"
+import { Activity, Settings, TrendingDown, Wind, Zap, Droplets, Hexagon } from "lucide-react"
+import { PlaybackControls } from "@/components/ui/playback-controls"
 
 // --- COMPONENT CON ---
 const ControlPanel = ({ title, icon: Icon, children }: { title: string; icon?: any; children: React.ReactNode }) => (
@@ -41,10 +42,11 @@ export default function DampedOscillation() {
     const [time, setTime] = useState(0)
     const [env, setEnv] = useState('air')
     const [graphMode, setGraphMode] = useState<'x' | 'v' | 'a'>('x') // Chế độ hiển thị đồ thị
-    const GRAPH_WINDOW = 20
 
+    // Updated: Graph always starts from 0 and scales to fit current time
+    // Default window is 20s if time < 20
     const [params, setParams] = useState({
-        A: 80,   // px
+        A: 80,   // cm
         f: 0.5,  // Hz
         phi: 0,  // rad
         m: 1.0,  // kg
@@ -52,7 +54,7 @@ export default function DampedOscillation() {
     })
 
     const energyHistoryRef = useRef<{ t: number, w: number }[]>([])
-    const animationRef = useRef<number>()
+    const animationRef = useRef<number | undefined>(undefined)
     const timeRef = useRef(0)
     const dt = 0.02
 
@@ -87,8 +89,13 @@ export default function DampedOscillation() {
     const width = 800
     const height = 380
     const centerY = height / 2
-    const shift = Math.max(0, time - GRAPH_WINDOW)
-    const timeScale = width / GRAPH_WINDOW
+
+    // FIT-TO-SCREEN LOGIC
+    // We want the graph to squeeze as time grows. 
+    // Minimum window is 20s. If time > 20s, window becomes time + 1s buffer.
+    const currentWindow = Math.max(20, time)
+    const timeScale = width / currentWindow
+    const shift = 0 // Always start from 0 for "Fit-to-Screen"
 
     const generatePaths = useCallback(() => {
         const points = []
@@ -98,8 +105,13 @@ export default function DampedOscillation() {
         const scaleV = omega > 0 ? 1 / omega : 1;
         const scaleA = omega > 0 ? 1 / (omega * omega) : 1;
 
+        // Plot resolution: 800px width.
+        // We step by pixel on screen (e.g., 2px step).
+        // This ensures visual density is constant, even if time is squeezed.
         for (let i = 0; i <= width; i += 2) {
-            const t_plot = shift + i / timeScale
+            const t_plot = i / timeScale
+            if (t_plot > currentWindow) break;
+
             const state = calculateState(t_plot)
 
             let val = 0;
@@ -120,10 +132,11 @@ export default function DampedOscillation() {
             envTop: graphMode === 'x' ? `M ${envTop.join(" L ")}` : "",
             envBot: graphMode === 'x' ? `M ${envBot.join(" L ")}` : "",
         }
-    }, [calculateState, graphMode, timeScale, centerY, omega, shift])
+    }, [calculateState, graphMode, timeScale, centerY, omega, currentWindow])
 
     const paths = generatePaths()
-    const cx = (time - shift) * timeScale
+    // Current X Position (Cursor)
+    const cx = time * timeScale
     const currState = calculateState(time)
 
     // Value to display for the dot (normalized)
@@ -135,6 +148,8 @@ export default function DampedOscillation() {
     // --- DRAW ENERGY GRAPH ---
     const drawEnergy = useCallback((ctx: CanvasRenderingContext2D) => {
         const w = ctx.canvas.width; const h = ctx.canvas.height;
+        // Energy graph also needs to fit-to-screen
+        const energyTimeScale = w / currentWindow
 
         ctx.fillStyle = "#0f172a"; ctx.fillRect(0, 0, w, h);
         ctx.strokeStyle = "#1e293b"; ctx.lineWidth = 0.5; ctx.beginPath();
@@ -150,35 +165,43 @@ export default function DampedOscillation() {
         ctx.strokeStyle = "#eab308"; ctx.lineWidth = 2; ctx.beginPath();
         let started = false
         history.forEach((pt) => {
-            if (pt.t < shift) return;
-            const x = (pt.t - shift) * (w / GRAPH_WINDOW);
+            const x = pt.t * energyTimeScale;
+            if (x > w) return;
+
             const y = h - 10 - (pt.w * yScale);
             if (!started) { ctx.moveTo(x, y); started = true; }
             else ctx.lineTo(x, y);
         });
         ctx.stroke();
 
-        // Simplified Fill
         ctx.fillStyle = "rgba(234, 179, 8, 0.1)";
-        // Need a closed path for fill, but simple stroke is enough for now or complex close
 
-    }, [shift])
+    }, [currentWindow])
 
     // --- LOOP ---
     const animate = useCallback(() => {
         if (isPlaying) {
             timeRef.current += dt;
-            setTime(timeRef.current);
+            const updatedTime = timeRef.current;
+            setTime(updatedTime);
 
-            const state = calculateState(timeRef.current);
-            if (timeRef.current % 0.1 < dt) {
-                energyHistoryRef.current.push({ t: timeRef.current, w: state.w });
-                if (energyHistoryRef.current.length > 5000) energyHistoryRef.current.shift();
+            const state = calculateState(updatedTime);
+
+            // AUTO STOP LOGIC
+            // If damping is active and amplitude drops below 0.1, stop.
+            if (beta > 0 && Math.abs(state.envelope) < 0.1) {
+                setIsPlaying(false);
+            }
+
+            if (updatedTime % 0.1 < dt) {
+                energyHistoryRef.current.push({ t: updatedTime, w: state.w });
+                // No shifting/limiting for now to show full history, assuming reasonable duration
+                if (energyHistoryRef.current.length > 10000) energyHistoryRef.current.shift(); // Safety cap only
             }
         }
         if (energyCanvasRef.current) drawEnergy(energyCanvasRef.current.getContext('2d')!);
         animationRef.current = requestAnimationFrame(animate);
-    }, [isPlaying, drawEnergy, calculateState]);
+    }, [isPlaying, drawEnergy, calculateState, beta]);
 
     useEffect(() => {
         animationRef.current = requestAnimationFrame(animate);
@@ -192,7 +215,42 @@ export default function DampedOscillation() {
     }, [params, env, drawEnergy, isPlaying])
 
     const handleReset = () => { setIsPlaying(false); timeRef.current = 0; setTime(0); energyHistoryRef.current = []; }
-    const handleStep = (dir: number) => { setIsPlaying(false); timeRef.current = Math.max(0, timeRef.current + dir * 0.5); setTime(timeRef.current); }
+    const handleStep = (dir: number) => {
+        setIsPlaying(false);
+        const standardStep = 0.1;
+        let targetT = timeRef.current + dir * standardStep;
+
+        // --- SNAP TO EQUILIBRIUM LOGIC ---
+        // Find the nearest zero crossing in the direction of movement
+        // Zero crossing condition: omega*t + phi = pi/2 + k*pi
+        // => t = (pi/2 + k*pi - phi) / omega
+        if (omega > 0) {
+            const currentPhase = omega * timeRef.current + params.phi;
+            // Solve for k: k = (phase - pi/2) / pi
+            const currentK = (currentPhase - Math.PI / 2) / Math.PI;
+
+            // If dragging forward, look for next integer k. If back, previous.
+            // If we are extremely close to an integer (already at zero), skip it.
+            let targetK = dir > 0 ? Math.ceil(currentK) : Math.floor(currentK);
+
+            // If we are effectively "at" this K already, move to the next one
+            if (Math.abs(targetK - currentK) < 0.01) {
+                targetK += dir;
+            }
+
+            const t_zero = (Math.PI / 2 + targetK * Math.PI - params.phi) / omega;
+
+            // Definition of "near": If the next zero is within 1.5x of a standard step, snap to it.
+            // This allows the user to click "Step" when they see it's close, and it lands exactly on 0.
+            if (Math.abs(t_zero - timeRef.current) < standardStep * 1.5) {
+                targetT = t_zero;
+            }
+        }
+
+        const finalT = Math.max(0, targetT);
+        timeRef.current = finalT;
+        setTime(finalT);
+    }
 
     // Màu sắc cho từng chế độ
     const getGraphColor = () => {
@@ -219,11 +277,13 @@ export default function DampedOscillation() {
                     {/* SVG Layer */}
                     <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} className="bg-[#0f172a] absolute inset-0">
                         <GridBackground />
+                        {/* Dynamic Grid: If grid is fixed width, it might look weird when scaling. 
+                            But keeping standard grid for reference is okay. */}
                         <rect width="100%" height="100%" fill="url(#grid)" opacity="0.5" />
 
                         {/* Trục tọa độ */}
                         <line x1="0" y1={centerY} x2={width} y2={centerY} stroke="#475569" strokeWidth="1" />
-                        <line x1="2" y1="0" x2="2" y2={height} stroke="#475569" strokeWidth="1" />
+                        <line x1="0" y1="0" x2="0" y2={height} stroke="#475569" strokeWidth="1" /> {/* Fixed Y-axis at x=0 */}
 
                         {/* Đường bao (Chỉ hiện khi xem x) */}
                         {beta > 0 && graphMode === 'x' && (
@@ -270,7 +330,7 @@ export default function DampedOscillation() {
                         </div>
                         <div className="flex justify-between mb-1">
                             <span className="text-slate-400">x:</span>
-                            <span className="text-cyan-400">{currState.x.toFixed(1)} px</span>
+                            <span className="text-cyan-400">{currState.x.toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between mb-1">
                             <span className="text-slate-400">v:</span>
@@ -294,17 +354,17 @@ export default function DampedOscillation() {
                     </div>
                 </div>
 
-                {/* Controls */}
-                <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 shadow-md flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center transition-all active:scale-95"><RotateCcw size={18} /></button>
-                        <button onClick={() => handleStep(-1)} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center transition-all active:scale-95"><SkipBack size={18} /></button>
-                        <button onClick={() => setIsPlaying(!isPlaying)} className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-lg active:scale-95 ${isPlaying ? 'bg-amber-500 hover:bg-amber-400 text-white' : 'bg-cyan-500 hover:bg-cyan-400 text-white'}`}>
-                            {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
-                        </button>
-                        <button onClick={() => handleStep(1)} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 flex items-center justify-center transition-all active:scale-95"><SkipForward size={18} /></button>
-                    </div>
-                    <div className="flex-1"></div>
+                {/* Controls - REPLACED WITH STANDARDIZED COMPONENT */}
+                <div className="flex justify-center">
+                    <PlaybackControls
+                        isPlaying={isPlaying}
+                        onPlayPause={() => setIsPlaying(!isPlaying)}
+                        onReset={handleReset}
+                        onStepForward={() => handleStep(1)}
+                        onStepBackward={() => handleStep(-1)}
+                        onSkipForward={() => handleStep(5)} // Large step 0.5s ? Wait, handleStep uses dir*0.1
+                        onSkipBackward={() => handleStep(-5)}
+                    />
                 </div>
 
                 {/* Energy Graph */}
@@ -346,7 +406,7 @@ export default function DampedOscillation() {
                             <input type="range" min="0.1" max="2" step="0.1" value={params.f} onChange={(e) => { setParams({ ...params, f: Number(e.target.value) }); handleReset(); }} className="w-full accent-cyan-500 h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
                         </div>
                         <div>
-                            <div className="flex justify-between text-xs text-slate-400 mb-1"><span>Biên độ đầu (A)</span> <span className="text-cyan-400 font-mono">{params.A} px</span></div>
+                            <div className="flex justify-between text-xs text-slate-400 mb-1"><span>Biên độ đầu (A)</span> <span className="text-cyan-400 font-mono">{params.A} cm</span></div>
                             <input type="range" min="20" max="150" value={params.A} onChange={(e) => { setParams({ ...params, A: Number(e.target.value) }); handleReset(); }} className="w-full accent-cyan-500 h-1.5 bg-slate-700 rounded-lg cursor-pointer" />
                         </div>
                         <div>

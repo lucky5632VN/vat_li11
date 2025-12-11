@@ -203,6 +203,11 @@ export default function PhysicsLab() {
           </div>
           <div className="w-[1px] h-8 bg-slate-300 dark:bg-slate-800"></div>
           <div className="text-right">
+            <div className="text-[10px] text-slate-500 uppercase font-sans font-bold">Giáo viên hướng dẫn</div>
+            <div className="font-sans font-bold text-sky-600 dark:text-cyan-500">Nguyễn Thị Hương</div>
+          </div>
+          <div className="w-[1px] h-8 bg-slate-300 dark:bg-slate-800"></div>
+          <div className="text-right">
             <div className="text-[10px] text-slate-500 uppercase font-sans font-bold">Chủ dự án</div>
             <div className="font-sans font-bold text-sky-600 dark:text-cyan-500">Hồ Hoàng Anh</div>
           </div>
