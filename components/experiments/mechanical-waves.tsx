@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useState, useCallback } from "react"
-import { Play, Pause, RotateCcw, SkipForward, SkipBack } from "lucide-react"
+import { PlaybackControls } from "@/components/ui/playback-controls"
 
 
 
@@ -275,45 +275,14 @@ export default function MechanicalWaves() {
           </div>
         </div>
 
-        {/* Controls - Fixed height at bottom */}
-        <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex items-center gap-3 shrink-0 shadow-sm z-10">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide w-full justify-center md:justify-start">
-            <button
-              onClick={handleReset}
-              className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0"
-              title="Reset"
-            >
-              <RotateCcw size={18} />
-            </button>
-            <button
-              onClick={() => handleStep(-1)}
-              className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0"
-              title="Lùi"
-            >
-              <SkipBack size={18} />
-            </button>
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent shrink-0 ${isPlaying
-                ? "bg-amber-500 hover:bg-amber-400 shadow-amber-900/20"
-                : "bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30"
-                } text-white`}
-              title={isPlaying ? "Dừng" : "Chạy"}
-            >
-              {isPlaying ? (
-                <Pause size={24} fill="currentColor" />
-              ) : (
-                <Play size={24} fill="currentColor" className="ml-1" />
-              )}
-            </button>
-            <button
-              onClick={() => handleStep(1)}
-              className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0"
-              title="Tiến"
-            >
-              <SkipForward size={18} />
-            </button>
-          </div>
+        <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex items-center justify-center gap-3 shrink-0 shadow-sm z-10">
+          <PlaybackControls
+            isPlaying={isPlaying}
+            onPlayPause={() => setIsPlaying(!isPlaying)}
+            onReset={handleReset}
+            onStepBackward={() => handleStep(-1)}
+            onStepForward={() => handleStep(1)}
+          />
         </div>
       </div>
 

@@ -2,7 +2,8 @@
 
 import { useRef, useEffect, useState, useCallback } from "react"
 import ControlPanel from "../ui/control-panel"
-import { Activity, Zap, TrendingUp, RotateCcw, SkipBack, Pause, Play, SkipForward, Ruler, Anchor } from "lucide-react"
+import { Activity, Zap, TrendingUp, Ruler, Anchor } from "lucide-react"
+import { PlaybackControls } from "@/components/ui/playback-controls"
 
 // Force update check
 export default function SimplePendulum() {
@@ -246,7 +247,7 @@ export default function SimplePendulum() {
         }
 
         drawSim(ctx, timeRef.current)
-        if (energyCanvasRef.current) drawEnergyGraph(energyCanvasRef.current.getContext("2d")!, timeRef.current)
+        if (energyCanvasRef.current) drawEnergyGraph(energyCanvasRef.current.getContext("2d")!)
 
     }, [isPlaying, drawSim, drawEnergyGraph, calculateState, params, dt])
 
@@ -268,7 +269,7 @@ export default function SimplePendulum() {
     useEffect(() => {
         if (!isPlaying && canvasRef.current && energyCanvasRef.current) {
             drawSim(canvasRef.current.getContext("2d")!, timeRef.current)
-            drawEnergyGraph(energyCanvasRef.current.getContext("2d")!, timeRef.current)
+            drawEnergyGraph(energyCanvasRef.current.getContext("2d")!)
         }
     }, [params, drawSim, drawEnergyGraph, isPlaying])
 
@@ -289,7 +290,7 @@ export default function SimplePendulum() {
                 energyCanvasRef.current.height = height
 
                 // Redraw Energy
-                drawEnergyGraph(energyCanvasRef.current.getContext("2d")!, timeRef.current)
+                drawEnergyGraph(energyCanvasRef.current.getContext("2d")!)
             }
         }
 
@@ -364,25 +365,13 @@ export default function SimplePendulum() {
 
                 {/* UNIFIED CONTROLS - Fixed at bottom */}
                 <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex items-center justify-center gap-3 shrink-0 shadow-sm z-10">
-                    <button onClick={handleReset} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Reset">
-                        <RotateCcw size={18} />
-                    </button>
-                    <button onClick={() => handleStep(-1)} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Lùi">
-                        <SkipBack size={18} />
-                    </button>
-                    <button
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent shrink-0 ${isPlaying
-                            ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/20"
-                            : "bg-cyan-600 hover:bg-cyan-500 shadow-cyan-500/30"
-                            } text-white`}
-                        title={isPlaying ? "Dừng" : "Chạy"}
-                    >
-                        {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
-                    </button>
-                    <button onClick={() => handleStep(1)} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0" title="Tiến">
-                        <SkipForward size={18} />
-                    </button>
+                    <PlaybackControls
+                        isPlaying={isPlaying}
+                        onPlayPause={() => setIsPlaying(!isPlaying)}
+                        onReset={handleReset}
+                        onStepForward={() => handleStep(1)}
+                        onStepBackward={() => handleStep(-1)}
+                    />
                 </div>
             </div>
 

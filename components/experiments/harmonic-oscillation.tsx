@@ -1,7 +1,8 @@
 "use client"
 
 import { useRef, useEffect, useState, useCallback } from "react"
-import { Zap, RotateCcw, SkipBack, Pause, Play, SkipForward, ChevronLeft, ChevronRight } from "lucide-react"
+import { PlaybackControls } from "@/components/ui/playback-controls"
+import { Zap } from "lucide-react"
 
 import { useCanvasScale } from "@/hooks/use-canvas-scale"
 
@@ -457,29 +458,15 @@ export default function HarmonicOscillation() {
 
         {/* Playback Controls - Fixed at bottom */}
         <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex flex-wrap items-center justify-center gap-3 shrink-0 shadow-sm z-10">
-          <button onClick={handleReset} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0">
-            <RotateCcw size={16} />
-          </button>
-          <div className="w-[1px] h-8 bg-slate-700 mx-1 shrink-0"></div>
-          <button onClick={() => handleSkip(-1)} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0">
-            <SkipBack size={16} />
-          </button>
-          <button onClick={() => handleMicroStep(-1)} className="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 flex items-center justify-center transition-all shadow-md active:scale-95 ring-1 ring-slate-700/50 shrink-0">
-            <ChevronLeft size={24} />
-          </button>
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg active:scale-95 border border-transparent mx-2 shrink-0 ${isPlaying ? "bg-amber-500 hover:bg-amber-400 shadow-amber-900/20" : "bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30"
-              } text-white`}
-          >
-            {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
-          </button>
-          <button onClick={() => handleMicroStep(1)} className="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-cyan-400 flex items-center justify-center transition-all shadow-md active:scale-95 ring-1 ring-slate-700/50 shrink-0">
-            <ChevronRight size={24} />
-          </button>
-          <button onClick={() => handleSkip(1)} className="w-10 h-10 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0">
-            <SkipForward size={16} />
-          </button>
+          <PlaybackControls
+            isPlaying={isPlaying}
+            onPlayPause={() => setIsPlaying(!isPlaying)}
+            onReset={handleReset}
+            onStepBackward={() => handleMicroStep(-1)}
+            onStepForward={() => handleMicroStep(1)}
+            onSkipBackward={() => handleSkip(-1)}
+            onSkipForward={() => handleSkip(1)}
+          />
         </div>
       </div>
 
