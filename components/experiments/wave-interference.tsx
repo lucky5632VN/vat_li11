@@ -1,7 +1,8 @@
 "use client"
 
 import { useRef, useEffect, useState, useCallback } from "react"
-import { Play, Pause, RotateCcw, Eye, EyeOff, Waves, SkipBack, SkipForward, Sun, Zap, Disc, Maximize2, Rainbow } from "lucide-react"
+import { Eye, EyeOff, Waves, Sun, Zap, Disc, Maximize2, Rainbow } from "lucide-react"
+import { PlaybackControls } from "@/components/ui/playback-controls"
 
 
 
@@ -490,8 +491,8 @@ export default function WaveInterference() {
   const calculateI = (wl: number) => (wl * 1e-9 * lightParams.screenDistance) / (lightParams.slitDistance * 1e-3) * 1000
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 font-sans items-start">
-      <div className="lg:col-span-3 space-y-4">
+    <div className="flex flex-col lg:flex-row h-full gap-4 font-sans">
+      <div className="flex-1 flex flex-col min-h-0 gap-4">
         {/* Nút chuyển chế độ */}
         <div className="flex gap-3 mb-2 p-1 bg-slate-800/50 rounded-xl w-fit backdrop-blur-sm border border-slate-700/50">
           <button
@@ -509,7 +510,7 @@ export default function WaveInterference() {
         </div>
 
         {/* Khung mô phỏng - Full height */}
-        <div className="bg-[#1e293b] rounded-xl border border-slate-700/50 shadow-xl overflow-hidden group">
+        <div className="flex-1 bg-[#1e293b] rounded-xl border border-slate-700/50 shadow-xl overflow-hidden group flex flex-col min-h-0 relative">
           {/* Header của Canvas */}
           <div className="px-4 py-2 border-b border-slate-700/50 bg-slate-800/50 flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
@@ -523,8 +524,8 @@ export default function WaveInterference() {
             </div>
           </div>
 
-          <div className="p-1 bg-[#0f172a] relative">
-            <canvas ref={canvasRef} width={800} height={340} className="w-full rounded-b-lg block" />
+          <div className="flex-1 bg-[#0f172a] relative w-full min-h-0">
+            <canvas ref={canvasRef} width={800} height={340} className="w-full h-full object-contain block" />
             <div className="absolute bottom-2 right-4 text-[10px] text-slate-600 font-mono pointer-events-none group-hover:text-slate-500 transition-colors">
               Hô Hoàng Anh A1K50
             </div>
@@ -532,33 +533,22 @@ export default function WaveInterference() {
         </div>
 
         {/* Controls Sóng cơ (Chỉ hiện khi ở chế độ sóng cơ) */}
+        {/* Controls Sóng cơ (Chỉ hiện khi ở chế độ sóng cơ) */}
         {mode === 'mechanical' && (
-          <div className="bg-[#1e293b]/80 backdrop-blur rounded-xl p-3 border border-slate-700/50 flex items-center gap-4 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-center gap-2">
-              <button onClick={handleReset} className="w-9 h-9 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-95">
-                <RotateCcw size={16} />
-              </button>
-              <button onClick={() => handleStep(-1)} className="w-9 h-9 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-95">
-                <SkipBack size={16} />
-              </button>
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-lg active:scale-95 ${isPlaying ? "bg-amber-500 hover:bg-amber-400 shadow-amber-900/20" : "bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30"
-                  } text-white`}
-              >
-                {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
-              </button>
-              <button onClick={() => handleStep(1)} className="w-9 h-9 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-95">
-                <SkipForward size={16} />
-              </button>
-            </div>
-            <div className="flex-1"></div>
+          <div className="bg-[#1e293b] rounded-xl p-3 border border-slate-700/50 flex-none flex items-center justify-center shadow-lg animate-in fade-in slide-in-from-top-2 shrink-0">
+            <PlaybackControls
+              isPlaying={isPlaying}
+              onPlayPause={() => setIsPlaying(!isPlaying)}
+              onReset={handleReset}
+              onStepForward={() => handleStep(1)}
+              onStepBackward={() => handleStep(-1)}
+            />
           </div>
         )}
       </div>
 
       {/* CỘT PHẢI: BẢNG THAM SỐ */}
-      <div className="space-y-4">
+      <div className="lg:w-80 flex-none flex flex-col gap-4 overflow-y-auto custom-scrollbar lg:h-full pb-2">
         {mode === 'mechanical' ? (
           <>
             <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-700/50 animate-in fade-in slide-in-from-right-4 shadow-lg">

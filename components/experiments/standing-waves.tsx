@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, RefreshCw, Info, Settings, Zap, Type, ChevronRight, Circle } from 'lucide-react';
+import { RefreshCw, Info, Settings, Zap, Type, ChevronRight, Circle } from 'lucide-react';
+import { PlaybackControls } from "@/components/ui/playback-controls"
 
 type BoundaryMode = 'fixed-fixed' | 'fixed-free';
 
@@ -256,24 +257,29 @@ const StandingWaveSim = () => {
 
   const handleReset = () => {
     setTime(0);
-    setIsPlaying(true);
+    setIsPlaying(false); // Should pause on reset usually
   };
+
+  const handleStep = (direction: number) => {
+    setIsPlaying(false);
+    setTime(prev => Math.max(0, prev + direction * 0.05));
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#020617] font-sans text-slate-200 selection:bg-cyan-500/30">
 
-      <main className="flex-grow p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="flex-grow p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        {/* LEFT COLUMN: VISUALIZATION (8 cols) */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+        {/* LEFT COLUMN: VISUALIZATION (9 cols - expanded) */}
+        <div className="lg:col-span-9 flex flex-col gap-4">
 
           {/* Canvas Card */}
           <div className="bg-[#0f172a] rounded-2xl shadow-2xl border border-slate-800 overflow-hidden relative group">
             <div className="absolute top-4 right-4 z-10 flex gap-2">
-              <div className={`px-3 py-1 rounded-full text-xs font-bold border ${mode === 'fixed-fixed' ? 'border-cyan-500/50 text-cyan-400 bg-cyan-950/30' : 'border-slate-700 text-slate-400 bg-slate-900/50'}`}>
+              <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${mode === 'fixed-fixed' ? 'border-cyan-500/50 text-cyan-400 bg-cyan-950/30' : 'border-slate-700 text-slate-400 bg-slate-900/50'}`}>
                 2 ĐẦU CỐ ĐỊNH
               </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-bold border ${mode === 'fixed-free' ? 'border-pink-500/50 text-pink-400 bg-pink-950/30' : 'border-slate-700 text-slate-400 bg-slate-900/50'}`}>
+              <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${mode === 'fixed-free' ? 'border-pink-500/50 text-pink-400 bg-pink-950/30' : 'border-slate-700 text-slate-400 bg-slate-900/50'}`}>
                 1 ĐẦU TỰ DO
               </div>
             </div>
@@ -287,111 +293,71 @@ const StandingWaveSim = () => {
           </div>
 
           {/* Playback Control Bar */}
-          <div className="bg-[#0f172a] rounded-2xl border border-slate-800 p-4 flex items-center justify-between shadow-lg">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleReset}
-                className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                title="Reset"
-              >
-                <RefreshCw size={18} />
-              </button>
-              <div className="h-8 w-[1px] bg-slate-700 mx-2"></div>
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className={`w-14 h-14 flex items-center justify-center rounded-full shadow-lg transition-all active:scale-95 ${isPlaying ? 'bg-cyan-500/20 text-cyan-400 ring-2 ring-cyan-500/50' : 'bg-cyan-500 text-slate-900 hover:bg-cyan-400'}`}
-              >
-                {isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
-              </button>
+          <div className="bg-[#0f172a] rounded-2xl border border-slate-800 p-3 flex items-center justify-between shadow-lg">
+            <div className="flex-1 flex justify-center">
+              <PlaybackControls
+                isPlaying={isPlaying}
+                onPlayPause={() => setIsPlaying(!isPlaying)}
+                onReset={handleReset}
+                onStepForward={() => handleStep(1)}
+                onStepBackward={() => handleStep(-1)}
+              />
             </div>
 
             {/* Live Data Display (Mini) */}
-            <div className="hidden sm:flex gap-8 text-right font-mono text-sm">
+            <div className="hidden sm:flex gap-6 text-right font-mono text-sm border-l border-slate-700 pl-4 py-1">
               <div title="Số bó sóng thực tế (k)">
-                <div className="text-slate-500 text-xs uppercase mb-1">Harmonics (k)</div>
-                <div className={`font-bold text-lg ${Math.abs(currentK - Math.round(currentK)) < 0.1 ? 'text-green-400' : 'text-slate-400'}`}>
+                <div className="text-slate-500 text-[10px] uppercase mb-0.5">Harmonics (k)</div>
+                <div className={`font-bold text-base ${Math.abs(currentK - Math.round(currentK)) < 0.1 ? 'text-green-400' : 'text-slate-400'}`}>
                   {currentK.toFixed(2)}
                 </div>
               </div>
               <div>
-                <div className="text-slate-500 text-xs uppercase mb-1">Wavelength</div>
-                <div className="text-pink-400 font-bold text-lg">{wavelength.toFixed(2)} <span className="text-xs text-slate-500">m</span></div>
+                <div className="text-slate-500 text-[10px] uppercase mb-0.5">λ (m)</div>
+                <div className="text-pink-400 font-bold text-base">{wavelength.toFixed(2)}</div>
               </div>
             </div>
           </div>
-
-          {/* Theory / Formulas Card */}
-          <div className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg">
-            <h3 className="text-cyan-400 font-bold mb-4 flex items-center gap-2">
-              <Type size={18} /> Công thức Sóng Dừng
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-300 font-mono leading-relaxed">
-              <div className="space-y-2">
-                <div className="flex justify-between border-b border-slate-800 pb-2">
-                  <span>Vận tốc (v):</span>
-                  <span className="text-emerald-400">√(T/μ) = {waveSpeed.toFixed(1)} m/s</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-800 pb-2">
-                  <span>Bước sóng (λ):</span>
-                  <span className="text-emerald-400">v/f = {wavelength.toFixed(2)} m</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-800 pb-2">
-                  <span>Số bó sóng (k):</span>
-                  <span className="text-emerald-400">2L/λ = {currentK.toFixed(2)}</span>
-                </div>
-              </div>
-              <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-                <p className="text-slate-400 text-xs mb-2 uppercase tracking-wider">Điều kiện biên ({mode === 'fixed-fixed' ? '2 Đầu Cố Định' : '1 Đầu Tự Do'})</p>
-                <div className="text-lg text-pink-300">
-                  {mode === 'fixed-fixed' ? 'L = k(λ/2)' : 'L = (2k-1)(λ/4)'}
-                </div>
-                <p className={`mt-2 text-xs italic ${Math.abs(currentK - Math.round(currentK)) < 0.1 ? 'text-green-400' : 'text-slate-500'}`}>
-                  {Math.abs(currentK - Math.round(currentK)) < 0.1 ? '✓ Đang cộng hưởng!' : '• Chưa cộng hưởng'}
-                </p>
-              </div>
-            </div>
-          </div>
-
         </div>
 
-        {/* RIGHT COLUMN: CONTROLS (4 cols) */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        {/* RIGHT COLUMN: CONTROLS (3 cols - compacted) */}
+        <div className="lg:col-span-3 flex flex-col gap-4">
 
           {/* Main Parameters Panel */}
-          <div className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg">
-            <h2 className="text-lg font-bold mb-6 text-white flex items-center gap-2">
-              <Settings size={20} className="text-cyan-400" /> Thông số dao động
+          <div className="bg-[#0f172a] rounded-xl border border-slate-800 p-4 shadow-lg flex flex-col h-full">
+            <h2 className="text-sm font-bold mb-4 text-white flex items-center gap-2 uppercase tracking-wider">
+              <Settings size={16} className="text-cyan-400" /> Cấu hình
             </h2>
 
             {/* Mode Toggle */}
-            <div className="mb-8 p-1 bg-slate-900 rounded-lg flex border border-slate-800">
+            <div className="mb-4 p-1 bg-slate-900 rounded-lg flex border border-slate-800">
               <button
                 onClick={() => setMode('fixed-fixed')}
-                className={`flex-1 py-2 text-xs font-bold rounded-md transition-all uppercase tracking-wide ${mode === 'fixed-fixed'
-                  ? 'bg-cyan-500 text-slate-900 shadow-lg shadow-cyan-500/20'
+                className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all uppercase tracking-wide ${mode === 'fixed-fixed'
+                  ? 'bg-cyan-500 text-slate-900 shadow shadow-cyan-500/20'
                   : 'text-slate-500 hover:text-slate-300'
                   }`}
               >
-                2 Đầu Cố Định
+                Cố định
               </button>
               <button
                 onClick={() => setMode('fixed-free')}
-                className={`flex-1 py-2 text-xs font-bold rounded-md transition-all uppercase tracking-wide ${mode === 'fixed-free'
-                  ? 'bg-pink-500 text-slate-900 shadow-lg shadow-pink-500/20'
+                className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all uppercase tracking-wide ${mode === 'fixed-free'
+                  ? 'bg-pink-500 text-slate-900 shadow shadow-pink-500/20'
                   : 'text-slate-500 hover:text-slate-300'
                   }`}
               >
-                1 Đầu Tự Do
+                Tự do
               </button>
             </div>
 
-            {/* Sliders */}
-            <div className="space-y-8">
+            {/* Sliders - Compact */}
+            <div className="space-y-4 flex-1">
 
-              {/* Frequency (Replaced K) */}
+              {/* Frequency */}
               <div className="group">
-                <div className="flex justify-between text-sm mb-2 font-medium">
-                  <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Tần số (Hz)</span>
+                <div className="flex justify-between text-xs mb-1 font-medium">
+                  <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Tần số (f)</span>
                   <span className="text-cyan-400 font-mono">{frequency} Hz</span>
                 </div>
                 <input
@@ -404,8 +370,8 @@ const StandingWaveSim = () => {
 
               {/* Length */}
               <div className="group">
-                <div className="flex justify-between text-sm mb-2 font-medium">
-                  <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Chiều dài dây (L)</span>
+                <div className="flex justify-between text-xs mb-1 font-medium">
+                  <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Chiều dài (L)</span>
                   <span className="text-cyan-400 font-mono">{length.toFixed(1)} m</span>
                 </div>
                 <input
@@ -418,7 +384,7 @@ const StandingWaveSim = () => {
 
               {/* Tension */}
               <div className="group">
-                <div className="flex justify-between text-sm mb-2 font-medium">
+                <div className="flex justify-between text-xs mb-1 font-medium">
                   <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Lực căng (T)</span>
                   <span className="text-cyan-400 font-mono">{tension} N</span>
                 </div>
@@ -432,8 +398,8 @@ const StandingWaveSim = () => {
 
               {/* Amplitude */}
               <div className="group">
-                <div className="flex justify-between text-sm mb-2 font-medium">
-                  <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Biên độ nguồn (A)</span>
+                <div className="flex justify-between text-xs mb-1 font-medium">
+                  <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Biên độ (A)</span>
                   <span className="text-cyan-400 font-mono">{(amplitude * 2).toFixed(1)} cm</span>
                 </div>
                 <input
@@ -446,9 +412,9 @@ const StandingWaveSim = () => {
 
               {/* Density */}
               <div className="group">
-                <div className="flex justify-between text-sm mb-2 font-medium">
-                  <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Mật độ dây (μ)</span>
-                  <span className="text-cyan-400 font-mono">{linearDensity.toFixed(3)} kg/m</span>
+                <div className="flex justify-between text-xs mb-1 font-medium">
+                  <span className="text-slate-400 group-hover:text-cyan-400 transition-colors">Mật độ (μ)</span>
+                  <span className="text-cyan-400 font-mono">{linearDensity.toFixed(3)}</span>
                 </div>
                 <input
                   type="range" min="0.001" max="0.05" step="0.001"
@@ -457,52 +423,23 @@ const StandingWaveSim = () => {
                   className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500 hover:accent-cyan-400"
                 />
               </div>
-
-            </div>
-          </div>
-
-          {/* Energy / Stats Panel */}
-          <div className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg">
-            <h3 className="text-yellow-400 font-bold mb-4 flex items-center gap-2">
-              <Zap size={18} /> Năng lượng sóng
-            </h3>
-
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-xs text-slate-400 mb-1">
-                  <span>Tốc độ truyền sóng (v)</span>
-                  <span className="text-emerald-400 font-mono">{waveSpeed.toFixed(1)} m/s</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((waveSpeed / 200) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-xs text-slate-400 mb-1">
-                  <span>Ước lượng năng lượng (E)</span>
-                  <span className="text-yellow-400 font-mono">{energy.toFixed(3)} J</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-yellow-500 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((energy * 50), 100)}%` }}
-                  ></div>
-                </div>
-              </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-800">
-              <div className="flex items-start gap-2 text-xs text-slate-500">
-                <Circle size={12} className="mt-0.5 text-cyan-400 fill-cyan-400 animate-pulse" />
-                <span>Điều chỉnh Tần số, Chiều dài, hoặc Lực căng để tìm điểm cộng hưởng (k nguyên).</span>
+            {/* Compact Stats */}
+            <div className="mt-4 pt-4 border-t border-slate-800 text-[10px] space-y-2">
+              <div className="flex justify-between text-slate-400">
+                <span>Vận tốc (v)</span>
+                <span className="text-emerald-400 font-mono">{waveSpeed.toFixed(1)} m/s</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Năng lượng (E)</span>
+                <span className="text-yellow-400 font-mono">{energy.toFixed(3)} J</span>
+              </div>
+              <div className="text-center italic mt-2 text-slate-500">
+                {Math.abs(currentK - Math.round(currentK)) < 0.1 ? <span className="text-green-400">✓ Đang cộng hưởng ({Math.round(currentK)} bó)</span> : 'Chưa cộng hưởng'}
               </div>
             </div>
           </div>
-
         </div>
       </main>
     </div>

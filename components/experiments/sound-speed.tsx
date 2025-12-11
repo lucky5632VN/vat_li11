@@ -61,7 +61,7 @@ const SoundSpeedExperiment = () => {
     const resonanceIntensity = calculateResonanceIntensity(airLength, wavelength);
 
     // --- Audio Engine ---
-    const [isMuted, setIsMuted] = useState(false);
+    const [isMuted, setIsMuted] = useState(true);
     const audioContextRef = useRef<AudioContext | null>(null);
     const oscillatorRef = useRef<OscillatorNode | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
@@ -328,7 +328,7 @@ const SoundSpeedExperiment = () => {
                         <div className="mb-6">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-slate-400 text-sm">Tần số âm thoa (f)</span>
-                                <button 
+                                <button
                                     onClick={() => setIsMuted(!isMuted)}
                                     className={`p-2 rounded-full transition-colors flex items-center gap-2 text-xs font-bold ${!isMuted ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' : 'bg-slate-800 text-slate-400 border border-slate-700'}`}
                                 >
