@@ -23,7 +23,10 @@ import {
   Hand,
   ChevronDown,
   ChevronRight,
-  Beaker
+  Beaker,
+  Disc,
+  Battery,
+  Grid
 } from "lucide-react"
 
 // Import UI Library
@@ -44,31 +47,52 @@ import SoundSpeedExperiment from "./experiments/sound-speed"
 import HandSpringOscillator from "./experiments/hand-spring-oscillator"
 import HandSimplePendulum from "./experiments/hand-simple-pendulum"
 import PhaseChange3D from "./experiments/phase-change-3d"
+import ElectricFieldCurrent from "./experiments/electric-field-current"
+import CoulombLaw from "./experiments/coulomb-law"
+import CapacitorLab from "./experiments/capacitor-lab"
+import DCCircuitLab from "./experiments/dc-circuit-lab"
 
 // Tách mục Intro ra riêng để xử lý hiển thị đặc biệt
 const INTRO_ITEM = { id: "intro", label: "Giới thiệu chung", icon: FlaskConical }
 
-// Danh sách thí nghiệm cơ bản
-const STANDARD_EXPERIMENTS = [
-  { id: "harmonic-oscillation", label: "Dao động điều hòa", icon: Zap },
-  { id: "spring-oscillator", label: "Con lắc lò xo", icon: Activity },
-  { id: "simple-pendulum", label: "Con lắc đơn", icon: Anchor },
-  { id: "damped-oscillation", label: "Dao động tắt dần", icon: TrendingDown },
-  { id: "mechanical-waves", label: "Sóng cơ", icon: Waves },
-  { id: "sound-waves", label: "Sóng âm", icon: Mic },
-  { id: "wave-interference", label: "Giao thoa sóng", icon: Aperture },
+// 1. DAO ĐỘNG CƠ
+const MECHANICS_EXPERIMENTS = [
+  { id: "harmonic-oscillation", label: "Dao động điều hòa", icon: Activity },
+  { id: "simple-pendulum", label: "Con lắc đơn", icon: Activity },
+  { id: "spring-oscillator", label: "Con lắc lò xo", icon: Activity }, // Added missing item
+  { id: "damped-oscillation", label: "Dao động tắt dần", icon: TrendingDown }, // Added missing item
+]
+
+// 2. SÓNG CƠ & ÂM HỌC
+const WAVES_EXPERIMENTS = [
+  { id: "mechanical-waves", label: "Sóng cơ", icon: Waves }, // Added missing item
+  { id: "standing-waves", label: "Sóng dừng", icon: Waves },
+  { id: "wave-interference", label: "Giao thoa sóng", icon: Disc },
+  { id: "sound-waves", label: "Sóng âm", icon: Mic }, // Added missing item
   { id: "sound-speed", label: "Đo tốc độ truyền âm", icon: Mic },
-  { id: "standing-waves", label: "Sóng dừng", icon: Infinity },
+]
+
+// 3. ĐIỆN & TỪ
+const ELECTRICITY_EXPERIMENTS = [
+  { id: "electric-field-current", label: "Điện trường & Dòng điện", icon: Zap },
+  { id: "dc-circuit-lab", label: "Mạch điện một chiều", icon: Grid },
+  { id: "coulomb-law", label: "Định luật Coulomb", icon: Zap },
+  { id: "capacitor-lab", label: "Tụ điện phẳng", icon: Battery },
 ]
 
 // Danh sách thử nghiệm (Hand Control / Beta)
 const TRIAL_EXPERIMENTS = [
-  { id: "hand-spring", label: "Con lò xo ", icon: Hand },
-  { id: "hand-pendulum", label: "Con lắc đơn ", icon: Hand },
+  { id: "hand-spring", label: "Con lò xo (Hand)", icon: Hand },
+  { id: "hand-pendulum", label: "Con lắc đơn (Hand)", icon: Hand },
   { id: "su-chuyen-the-html", label: "Sự chuyển thể (3D)", icon: Beaker },
 ]
 
-const ALL_EXPERIMENTS = [...STANDARD_EXPERIMENTS, ...TRIAL_EXPERIMENTS]
+const ALL_EXPERIMENTS = [
+  ...MECHANICS_EXPERIMENTS,
+  ...WAVES_EXPERIMENTS,
+  ...ELECTRICITY_EXPERIMENTS,
+  ...TRIAL_EXPERIMENTS
+]
 
 export default function PhysicsLab() {
   const [activeTab, setActiveTab] = useState("intro")
@@ -76,7 +100,9 @@ export default function PhysicsLab() {
   const [customModules, setCustomModules] = useState<any[]>([])
 
   // Section Collapse State
-  const [isStandardOpen, setStandardOpen] = useState(false)
+  const [isMechanicsOpen, setMechanicsOpen] = useState(true)
+  const [isWavesOpen, setWavesOpen] = useState(false)
+  const [isElectricityOpen, setElectricityOpen] = useState(false)
   const [isTrialOpen, setTrialOpen] = useState(false)
 
   const mainContentRef = useRef<HTMLDivElement>(null)
@@ -137,11 +163,13 @@ export default function PhysicsLab() {
       case "wave-interference": return <WaveInterference />
       case "standing-waves": return <StandingWaves />
       case "sound-speed": return <SoundSpeedExperiment />
-
+      case "electric-field-current": return <ElectricFieldCurrent />
+      case "coulomb-law": return <CoulombLaw />
+      case "capacitor-lab": return <CapacitorLab />;
+      case "dc-circuit-lab": return <DCCircuitLab />;
       case "hand-spring": return <HandSpringOscillator />
       case "hand-pendulum": return <HandSimplePendulum />
       case "su-chuyen-the-html": return <PhaseChange3D />
-
     }
 
     // Check custom modules
@@ -161,6 +189,27 @@ export default function PhysicsLab() {
 
     return <PhysicsIntro onSelectExperiment={setActiveTab} />
   }
+
+  const SidebarItem = ({ item }: { item: any }) => (
+    <button
+      key={item.id}
+      onClick={() => {
+        setActiveTab(item.id);
+        if (window.innerWidth < 768) setIsSidebarOpen(false);
+      }}
+      className={`
+        w-full text-left px-4 py-2.5 rounded-r font-sans text-xs font-bold uppercase tracking-wide transition-all group relative overflow-hidden
+        ${activeTab === item.id
+          ? 'bg-sky-100 dark:bg-cyan-950/40 text-sky-700 dark:text-cyan-400 border-l-2 border-cyan-500'
+          : 'text-slate-600 dark:text-slate-500 hover:bg-sky-50 dark:hover:bg-slate-800/50 hover:text-sky-600 dark:hover:text-cyan-300'}
+        `}
+    >
+      <div className="relative z-10 flex items-center gap-3">
+        <item.icon size={16} className={activeTab === item.id ? "animate-pulse" : ""} />
+        {item.label}
+      </div>
+    </button>
+  );
 
   return (
     <LabLayout>
@@ -229,8 +278,8 @@ export default function PhysicsLab() {
             <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500 hover:text-sky-600 dark:hover:text-cyan-400"><X /></button>
           </div>
 
-          {/* SECTION 1: GIỚI THIỆU CHUNG */}
-          <div className="mb-6 px-0">
+          {/* SECTION: GIỚI THIỆU CHUNG */}
+          <div className="mb-2 px-0">
             <button
               onClick={() => {
                 setActiveTab(INTRO_ITEM.id);
@@ -251,77 +300,99 @@ export default function PhysicsLab() {
             </button>
           </div>
 
-          {/* SECTION 2: DANH MỤC CƠ BẢN */}
-          <button
-            onClick={() => setStandardOpen(!isStandardOpen)}
-            className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-500 uppercase font-sans tracking-widest mb-2 px-2 hover:text-cyan-500 transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <FlaskConical size={14} /> CÁC THÍ NGHIỆM
-            </span>
-            {isStandardOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
+          <div className="overflow-y-auto flex-1 custom-scrollbar pr-2 space-y-4">
 
-          {isStandardOpen && (
-            <div className="space-y-1 overflow-y-auto scrollbar-hide mb-6 pl-2 border-l border-slate-200 dark:border-slate-800 ml-3">
-              {STANDARD_EXPERIMENTS.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    if (window.innerWidth < 768) setIsSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full text-left px-4 py-2.5 rounded-r font-sans text-xs font-bold uppercase tracking-wide transition-all group relative overflow-hidden
-                    ${activeTab === item.id
-                      ? 'bg-sky-100 dark:bg-cyan-950/40 text-sky-700 dark:text-cyan-400 border-l-2 border-cyan-500'
-                      : 'text-slate-600 dark:text-slate-500 hover:bg-sky-50 dark:hover:bg-slate-800/50 hover:text-sky-600 dark:hover:text-cyan-300'}
-                    `}
-                >
-                  <div className="relative z-10 flex items-center gap-3">
-                    <item.icon size={16} className={activeTab === item.id ? "animate-pulse" : ""} />
-                    {item.label}
-                  </div>
-                </button>
-              ))}
+            {/* GROUP 1: MECHANICS */}
+            <div>
+              <button
+                onClick={() => setMechanicsOpen(!isMechanicsOpen)}
+                className={`flex items-center justify-between text-xs font-bold uppercase font-sans tracking-widest mb-2 px-2 transition-colors w-full
+                  ${isMechanicsOpen
+                    ? 'text-cyan-600 dark:text-cyan-400'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-cyan-500'
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Activity size={14} /> DAO ĐỘNG CƠ
+                </span>
+                {isMechanicsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              {isMechanicsOpen && (
+                <div className="space-y-1 pl-2 border-l border-slate-200 dark:border-slate-800 ml-3">
+                  {MECHANICS_EXPERIMENTS.map((item) => <SidebarItem key={item.id} item={item} />)}
+                </div>
+              )}
             </div>
-          )}
 
-          {/* SECTION 3: THỬ NGHIỆM (HAND CONTROL) */}
-          <button
-            onClick={() => setTrialOpen(!isTrialOpen)}
-            className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-500 uppercase font-sans tracking-widest mb-2 px-2 hover:text-cyan-500 transition-colors"
-          >
-            <span className="flex items-center gap-2">
-              <Beaker size={14} /> THỬ NGHIỆM
-            </span>
-            {isTrialOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
-
-          {isTrialOpen && (
-            <div className="space-y-1 overflow-y-auto scrollbar-hide mb-4 pl-2 border-l border-slate-200 dark:border-slate-800 ml-3">
-              {TRIAL_EXPERIMENTS.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    if (window.innerWidth < 768) setIsSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full text-left px-4 py-2.5 rounded-r font-sans text-xs font-bold uppercase tracking-wide transition-all group relative overflow-hidden
-                    ${activeTab === item.id
-                      ? 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border-l-2 border-purple-500'
-                      : 'text-slate-600 dark:text-slate-500 hover:bg-purple-50 dark:hover:bg-slate-800/50 hover:text-purple-600 dark:hover:text-purple-300'}
-                    `}
-                >
-                  <div className="relative z-10 flex items-center gap-3">
-                    <item.icon size={16} className={activeTab === item.id ? "animate-pulse" : ""} />
-                    {item.label}
-                  </div>
-                </button>
-              ))}
+            {/* GROUP 2: WAVES */}
+            <div>
+              <button
+                onClick={() => setWavesOpen(!isWavesOpen)}
+                className={`flex items-center justify-between text-xs font-bold uppercase font-sans tracking-widest mb-2 px-2 transition-colors w-full
+                  ${isWavesOpen
+                    ? 'text-cyan-600 dark:text-cyan-400'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-cyan-500'
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Waves size={14} /> SÓNG CƠ & ÂM
+                </span>
+                {isWavesOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              {isWavesOpen && (
+                <div className="space-y-1 pl-2 border-l border-slate-200 dark:border-slate-800 ml-3">
+                  {WAVES_EXPERIMENTS.map((item) => <SidebarItem key={item.id} item={item} />)}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* GROUP 3: ELECTRICITY */}
+            <div>
+              <button
+                onClick={() => setElectricityOpen(!isElectricityOpen)}
+                className={`flex items-center justify-between text-xs font-bold uppercase font-sans tracking-widest mb-2 px-2 transition-colors w-full
+                  ${isElectricityOpen
+                    ? 'text-cyan-600 dark:text-cyan-400'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-cyan-500'
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Zap size={14} /> ĐIỆN & TỪ
+                </span>
+                {isElectricityOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              {isElectricityOpen && (
+                <div className="space-y-1 pl-2 border-l border-slate-200 dark:border-slate-800 ml-3">
+                  {ELECTRICITY_EXPERIMENTS.map((item) => <SidebarItem key={item.id} item={item} />)}
+                </div>
+              )}
+            </div>
+
+            {/* GROUP 4: TRIALS */}
+
+            {/* GROUP 5: TRIALS */}
+            <div>
+              <button
+                onClick={() => setTrialOpen(!isTrialOpen)}
+                className={`flex items-center justify-between text-xs font-bold uppercase font-sans tracking-widest mb-2 px-2 transition-colors w-full
+                  ${isTrialOpen
+                    ? 'text-purple-600 dark:text-purple-400'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-purple-500'
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Hand size={14} /> THỬ NGHIỆM
+                </span>
+                {isTrialOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              {isTrialOpen && (
+                <div className="space-y-1 pl-2 border-l border-slate-200 dark:border-slate-800 ml-3">
+                  {TRIAL_EXPERIMENTS.map((item) => <SidebarItem key={item.id} item={item} />)}
+                </div>
+              )}
+            </div>
+
+          </div>
 
           {/* SECTION 3: USER MODULES */}
 
@@ -337,7 +408,7 @@ export default function PhysicsLab() {
               <div className="text-[10px] text-sky-600 dark:text-cyan-400 font-sans font-bold mt-0.5">Class: A1 - K50</div>
             </div>
 
-            <div className="text-[10px] text-slate-500 dark:text-slate-600 text-center font-medium pb-2">
+            <div className="text-[10px] text-slate-500 dark:text-slate-600 text-center font-medium pb-10">
               2025 © <span className="text-slate-600 dark:text-slate-500 hover:text-sky-600 dark:hover:text-cyan-500 cursor-pointer transition-colors">Metronic Physics Theme</span>
             </div>
           </div>
@@ -350,7 +421,7 @@ export default function PhysicsLab() {
         >
           {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
 
-          <div className={`animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 h-full w-full ${["spring-oscillator", "simple-pendulum", "harmonic-oscillation", "mechanical-waves", "sound-waves", "su-chuyen-the-html"].includes(activeTab) || customModules.find(m => m.id === activeTab)
+          <div className={`animate-in fade-in slide-in-from-bottom-4 duration-500 flex-1 h-full w-full ${["spring-oscillator", "simple-pendulum", "harmonic-oscillation", "mechanical-waves", "sound-waves", "electric-field", "coulomb-law", "su-chuyen-the-html"].includes(activeTab) || customModules.find(m => m.id === activeTab)
             ? "overflow-hidden"
             : "overflow-y-auto overflow-x-hidden custom-scrollbar"
             }`}>

@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react"
 import {
-  Activity, Waves, Mic, Anchor, Aperture, Infinity, TrendingDown, Zap,
-  Database, Cpu, ArrowUpRight, Box, Trash2, Atom, Terminal, FileCode, FlaskConical
+  Activity, Waves, Mic, Anchor, Aperture, Infinity, TrendingDown, Zap, Battery, Grid,
+  Database, Cpu, ArrowUpRight, Box, Trash2, Atom, Terminal, FileCode, FlaskConical, Layers
 } from "lucide-react"
 // Sửa đường dẫn import cho đúng cấu trúc thư mục
 import { HoloCard, NeonButton } from "../ui/sci-fi-lab"
@@ -54,15 +54,43 @@ const EXPERIMENTS = [
   {
     id: "wave-interference",
     title: "Giao thoa sóng",
-    icon: Aperture,
+    icon: Layers,
+    code: "EXP-06",
+    desc: "Mô phỏng giao thoa sóng cơ và ánh sáng."
+  },
+  {
+    id: "electric-field",
+    title: "Điện trường & Dòng điện",
+    icon: Zap,
     code: "EXP-07",
-    desc: "Hiện tượng giao thoa hai nguồn kết hợp."
+    desc: "Mô phỏng đường sức điện và bản chất dòng điện."
+  },
+  {
+    id: "coulomb-law",
+    title: "Định luật Coulomb",
+    icon: Zap,
+    code: "EXP-08",
+    desc: "Khảo sát lực tương tác tĩnh điện giữa hai điện tích điểm."
+  },
+  {
+    id: "capacitor-lab",
+    title: "Tụ điện phẳng",
+    icon: Battery,
+    code: "EXP-09",
+    desc: "Khảo sát điện dung, điện tích và năng lượng tụ điện."
+  },
+  {
+    id: "dc-circuit-lab",
+    title: "Mạch điện DC",
+    icon: Grid,
+    code: "EXP-10",
+    desc: "Lắp ráp mạch điện nối tiếp và song song."
   },
   {
     id: "standing-waves",
     title: "Sóng dừng",
     icon: Infinity,
-    code: "EXP-08",
+    code: "EXP-11",
     desc: "Bụng sóng và nút sóng trên dây."
   },
   {
